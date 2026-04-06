@@ -106,6 +106,77 @@ def digest(category, days):
     click.echo(f'Дайджест: category={category}, days={days}')
 
 
+@cli.command(name='list')
+@click.option('--status', type=click.Choice(['read', 'unread', 'starred']), help='Фильтр по статусу')
+@click.option('--category', '-c', help='Фильтр по категории')
+@click.option('--tag', '-t', multiple=True, help='Фильтр по тегу')
+@click.option('--search', '-s', help='Поиск по названию и аннотации')
+@click.option('--sort', type=click.Choice(['added_at', 'published', 'title', 'read_at']), default='added_at', help='Сортировка')
+@click.option('--order', type=click.Choice(['asc', 'desc']), default='desc', help='Порядок сортировки')
+@click.option('--table', is_flag=True, help='Табличный формат')
+@click.option('--compact', is_flag=True, help='Компактный вывод')
+@click.option('--mark-read', help='Отметить статью как прочитанную (arXiv ID)')
+@click.option('--mark-unread', help='Отметить статью как непрочитанную (arXiv ID)')
+@click.option('--star', help='Переключить избранное (arXiv ID)')
+def list_cmd(status, category, tag, search, sort, order, table, compact, mark_read, mark_unread, star):
+    """Вывод локальной библиотеки статей."""
+    from arxiv_cli.commands.list import list_library, mark_as_read, mark_as_unread, toggle_star
+    from arxiv_cli.utils.formatter import format_library_entry, format_library_table
+    from arxiv_cli.utils.library import get_stats
+    
+    try:
+        # Действия со статусом
+        if mark_read:
+            mark_as_read(mark_read)
+            click.echo(f'✓ Статья {mark_read} отмечена как прочитанная')
+            return
+        
+        if mark_unread:
+            mark_as_unread(mark_unread)
+            click.echo(f'✓ Статья {mark_unread} отмечена как непрочитанная')
+            return
+        
+        if star:
+            is_starred = toggle_star(star)
+            icon = '★' if is_starred else '☆'
+            click.echo(f'{icon} Статья {star} {"добавлена в избранное" if is_starred else "удалена из избранного"}')
+            return
+        
+        # Получаем статьи
+        entries = list_library(
+            status=status,
+            category=category,
+            tags=list(tag) if tag else None,
+            search_query=search,
+            sort_by=sort,
+            sort_order=order
+        )
+        
+        if not entries:
+            click.echo('Библиотека пуста или не найдено статей по фильтру.')
+            click.echo('\nДобавьте статьи командой: download <arxiv_id>')
+            return
+        
+        # Статистика
+        stats = get_stats()
+        click.echo(f"Библиотека: {len(entries)} из {stats['total']} статей")
+        click.echo(f"Прочитано: {stats['statuses']['read']}, Непрочитано: {stats['statuses']['unread']}, Избранное: {stats['starred']}")
+        click.echo()
+        
+        # Вывод
+        if table:
+            click.echo(format_library_table(entries))
+        else:
+            for i, entry in enumerate(entries, 1):
+                click.echo(f"[{i}]")
+                click.echo(format_library_entry(entry, compact=compact))
+                click.echo('=' * 80)
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
 @cli.command()
 def watch():
     """Управление отслеживанием обновлений."""

@@ -45,7 +45,7 @@ pytest tests/ -v -k "not real"
 
 ## Использование
 
-**Текущий статус реализации:** ✅ `download`, `search`, `export` | 🚧 `digest`, `watch`
+**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list` | 🚧 `digest`, `track`, `subscribe`
 
 ### Скачивание PDF статей
 
@@ -196,14 +196,73 @@ python3 -m arxiv_cli.cli export --all --category cs.AI --tag transformers --form
 - **BibTeX** — для LaTeX, JabRef
 - **CSL JSON** — для Zotero, Mendeley, Citation.js
 
+### Управление библиотекой статей
+
+```bash
+# Показать всю библиотеку
+python3 -m arxiv_cli.cli list
+
+# Табличный формат
+python3 -m arxiv_cli.cli list --table
+
+# Фильтр по статусу
+python3 -m arxiv_cli.cli list --status read
+python3 -m arxiv_cli.cli list --status unread
+python3 -m arxiv_cli.cli list --status starred
+
+# Фильтр по тегу
+python3 -m arxiv_cli.cli list --tag llm --compact
+
+# Поиск по названию и аннотации
+python3 -m arxiv_cli.cli list --search "attention mechanism"
+
+# Сортировка
+python3 -m arxiv_cli.cli list --sort published --order asc
+python3 -m arxiv_cli.cli list --sort title
+
+# Отметить статью как прочитанную
+python3 -m arxiv_cli.cli list --mark-read 1706.03762
+
+# Отметить как непрочитанную
+python3 -m arxiv_cli.cli list --mark-unread 1706.03762
+
+# Добавить/убрать из избранного
+python3 -m arxiv_cli.cli list --star 2005.14165
+
+# Комбинация фильтров
+python3 -m arxiv_cli.cli list --status unread --tag gpt --table
+```
+
+**Параметры:**
+- `--status` — фильтр: `read`, `unread`, `starred`
+- `-c, --category` — фильтр по категории
+- `-t, --tag` — фильтр по тегу (можно несколько)
+- `-s, --search` — поиск по названию и аннотации
+- `--sort` — сортировка: `added_at` (по умолчанию), `published`, `title`, `read_at`
+- `--order` — порядок: `desc` (по умолчанию), `asc`
+- `--table` — табличный формат
+- `--compact` — компактный вывод (без аннотаций)
+- `--mark-read` — отметить как прочитанную
+- `--mark-unread` — отметить как непрочитанную
+- `--star` — переключить избранное
+
+**Индикаторы статуса:**
+- `○` — непрочитано
+- `✓` — прочитано
+- `★` — в избранном
+- `☆` — не в избранном
+
 ### Команды в разработке
 
 ```bash
 # Дайджест за последнюю неделю (TODO)
-python3 -m arxiv_cli.cli digest --category cs.AI --days 7
+python3 -m arxiv_cli.cli digest --period week --category cs.AI
 
-# Отслеживание обновлений (TODO)
-python3 -m arxiv_cli.cli watch add "quantum computing" --name quantum
+# Отслеживание статей (TODO)
+python3 -m arxiv_cli.cli track add 1706.03762
+
+# Подписки (TODO)
+python3 -m arxiv_cli.cli subscribe add --query "LLM agents" --category cs.AI
 ```
 
 ## Структура проекта

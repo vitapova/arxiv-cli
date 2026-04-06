@@ -4,6 +4,8 @@
 Функции для форматирования данных:
 - format_search_result(entry) - форматирование результата поиска
 - format_search_table(entries) - табличный формат результатов
+- format_library_entry(entry) - форматирование записи библиотеки
+- format_library_table(entries) - табличный формат библиотеки
 - format_digest(entries) - форматирование дайджеста
 - format_bibtex(entry) - генерация BibTeX
 - format_csl(entry) - генерация CSL JSON
@@ -94,6 +96,101 @@ def format_search_result(entry, format='text', compact=False):
         # Ссылки
         lines.append(f"\nPDF: {entry['pdf_url']}")
         lines.append(f"Abstract: {entry['abs_url']}")
+    
+    return '\n'.join(lines)
+
+
+def format_library_entry(entry, compact=False):
+    """
+    Форматирование записи библиотеки.
+    
+    Args:
+        entry: данные статьи из библиотеки
+        compact: компактный вывод
+        
+    Returns:
+        str: отформатированная запись
+    """
+    lines = []
+    
+    # ID и статус
+    status_icon = '✓' if entry.get('status') == 'read' else '○'
+    star_icon = '★' if entry.get('starred', False) else '☆'
+    lines.append(f"{status_icon} {star_icon} ID: {entry['id']}")
+    
+    # Название
+    lines.append(f"Название: {entry['title']}")
+    
+    # Авторы
+    authors = entry['authors']
+    if len(authors) <= 3:
+        authors_str = ', '.join(authors)
+    else:
+        authors_str = ', '.join(authors[:3]) + f' и ещё {len(authors) - 3}'
+    lines.append(f"Авторы: {authors_str}")
+    
+    # Категория и теги
+    lines.append(f"Категория: {entry['primary_category']}")
+    if entry.get('tags'):
+        lines.append(f"Теги: {', '.join(entry['tags'])}")
+    
+    # Даты
+    lines.append(f"Опубликовано: {entry['published'][:10]}")
+    lines.append(f"Добавлено: {entry.get('added_at', 'неизвестно')[:10]}")
+    
+    if entry.get('read_at'):
+        lines.append(f"Прочитано: {entry['read_at'][:10]}")
+    
+    if not compact:
+        # Аннотация
+        abstract = entry['abstract'].replace('\n', ' ')
+        if len(abstract) > 200:
+            abstract = abstract[:197] + '...'
+        lines.append(f"\n{abstract}")
+    
+    return '\n'.join(lines)
+
+
+def format_library_table(entries):
+    """
+    Табличный формат библиотеки.
+    
+    Args:
+        entries: список статей
+        
+    Returns:
+        str: отформатированная таблица
+    """
+    if not entries:
+        return "Библиотека пуста"
+    
+    lines = []
+    
+    # Заголовок таблицы
+    lines.append(f"{'St':<3} {'ID':<15} {'Дата':<12} {'Кат':<8} {'Теги':<15} {'Название'}")
+    lines.append('=' * 120)
+    
+    # Строки таблицы
+    for entry in entries:
+        # Статус
+        status = '✓' if entry.get('status') == 'read' else '○'
+        if entry.get('starred', False):
+            status = '★'
+        
+        arxiv_id = entry['id'][:15]
+        date = entry.get('added_at', '')[:10]
+        category = entry['primary_category'][:8]
+        
+        # Теги
+        tags = entry.get('tags', [])
+        tags_str = ','.join(tags[:2])[:15] if tags else '-'
+        
+        # Название
+        title = entry['title']
+        if len(title) > 50:
+            title = title[:47] + '...'
+        
+        lines.append(f"{status:<3} {arxiv_id:<15} {date:<12} {category:<8} {tags_str:<15} {title}")
     
     return '\n'.join(lines)
 
