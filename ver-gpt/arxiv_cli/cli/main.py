@@ -15,6 +15,11 @@ from arxiv_cli.utils.formatting import (
 
 app = typer.Typer(add_completion=False, help="CLI for arXiv: search, digests, watch, PDF, export")
 
+# Subcommands
+from arxiv_cli.cli.download import add_download_command
+
+add_download_command(app)
+
 
 @app.command("search")
 def search(

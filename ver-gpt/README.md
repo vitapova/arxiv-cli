@@ -13,12 +13,11 @@
   - фильтр по датам: `--from`, `--to` (по `published`, client-side)
   - форматы вывода: `--format table|compact|text`, плюс `--json`
 
-## Планируемые команды
+## Команды
 
-- `arxiv digest` — дайджест новых публикаций
-- `arxiv watch` — отслеживание сохранённых запросов
-- `arxiv pdf` — скачать PDF
-- `arxiv export` — экспорт BibTeX/CSL
+- `arxiv search` — поиск
+- `arxiv download` — скачивание PDF
+- (в планах) `arxiv digest`, `arxiv watch`, `arxiv export`
 
 ## Источник данных
 
@@ -37,6 +36,23 @@ pip install -e .
 ```
 
 ## Примеры
+
+### Download одного PDF по id
+
+```bash
+arxiv download 2604.03199v1 --output-dir ./papers
+```
+
+Именование файла: `{id}_{first_author}_{year}.pdf`
+
+### Batch download из файла
+
+```bash
+arxiv download --batch docs/batch_ids.txt --output-dir ./papers
+```
+
+Формат batch-файла: 1 id на строку, `#` — комментарии.
+
 
 ### 1) Raw запрос (как в документации arXiv)
 

@@ -1,0 +1,4 @@
+# Example batch file for `arxiv download --batch`
+# One arXiv id per line (comments allowed).
+2604.03199v1
+2604.02881v1
