@@ -20,4 +20,4 @@ arXiv API:
 
 ## Dev
 
-Требования и сборка будут добавлены после выбора стека (Go/TS/Python) и CLI-фреймворка.
+Проект на Python (упаковка через `pyproject.toml`). CLI-фреймворк (Typer/Click/Argparse) выберем на следующем шаге.
