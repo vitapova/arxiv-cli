@@ -1,0 +1,18 @@
+[
+  {
+    "arxiv_id": "2604.03199v1",
+    "title": "Learning the Signature of Memorization in Autoregressive Language Models",
+    "authors": ["David Ilić", "Kostadin Cvejoski"],
+    "categories": ["cs.CL", "cs.LG"],
+    "published": "2026-04-03T00:00:00+00:00",
+    "tags": ["transformers", "memorization"]
+  },
+  {
+    "arxiv_id": "2604.02881v1",
+    "title": "One Model to Translate Them All? A Journey to Mount Doom for Multilingual Model Merging",
+    "authors": ["Baban Gain", "Asif Ekbal"],
+    "categories": ["cs.CL"],
+    "published": "2026-04-03T00:00:00+00:00",
+    "tags": ["multilingual"]
+  }
+]

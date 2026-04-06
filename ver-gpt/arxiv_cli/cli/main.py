@@ -17,8 +17,10 @@ app = typer.Typer(add_completion=False, help="CLI for arXiv: search, digests, wa
 
 # Subcommands
 from arxiv_cli.cli.download import add_download_command
+from arxiv_cli.cli.export_cmd import add_export_command
 
 add_download_command(app)
+add_export_command(app)
 
 
 @app.command("search")

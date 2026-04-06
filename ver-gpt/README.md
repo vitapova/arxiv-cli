@@ -13,11 +13,22 @@
   - фильтр по датам: `--from`, `--to` (по `published`, client-side)
   - форматы вывода: `--format table|compact|text`, плюс `--json`
 
+- `arxiv download` — скачивание PDF по arXiv id
+  - `--output-dir` для выбора папки
+  - `--batch` для пакетного скачивания
+  - именование: `{id}_{first_author}_{year}.pdf`
+
+- `arxiv export` — экспорт библиографии из локальной библиотеки
+  - `--format bibtex|csl`
+  - фильтры: `--tag`, `--category`
+  - экспорт всей библиотеки по умолчанию
+
 ## Команды
 
 - `arxiv search` — поиск
 - `arxiv download` — скачивание PDF
-- (в планах) `arxiv digest`, `arxiv watch`, `arxiv export`
+- `arxiv export` — экспорт библиографии
+- (в планах) `arxiv digest`, `arxiv watch`
 
 ## Источник данных
 
@@ -95,3 +106,36 @@ arxiv download --batch docs/batch_ids.txt --output-dir ./papers
 ```
 
 Формат batch-файла: 1 id на строку, `#` — комментарии.
+
+### `export`
+
+> Команда экспортирует **сохранённую локальную библиотеку** из JSON-файла
+> `./.arxiv-cli-library.json` (пока это минимальный формат хранения; позже сделаем `save/add`).
+>
+> Пример структуры см. `docs/library.example.json`.
+
+#### 1) Экспорт всей библиотеки в BibTeX
+
+```bash
+arxiv export --format bibtex
+```
+
+#### 2) Экспорт всей библиотеки в CSL-JSON
+
+```bash
+arxiv export --format csl
+```
+
+#### 3) Фильтрация по тегу / категории
+
+```bash
+arxiv export --format bibtex --tag multilingual
+arxiv export --format csl --category cs.LG
+```
+
+#### 4) Экспорт в файл
+
+```bash
+arxiv export --format bibtex --out refs.bib
+arxiv export --format csl --out refs.json
+```
