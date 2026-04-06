@@ -52,6 +52,11 @@ def search(
     max_results: Optional[int] = typer.Option(None, "--max-results", help="Number of results to fetch (advanced/legacy)"),
     # Sorting (preferred UX)
     sort: str = typer.Option("relevance", "--sort", help="relevance|date (date=submittedDate)"),
+    sort_by_legacy: Optional[str] = typer.Option(
+        None,
+        "--sort-by",
+        help="Legacy: relevance|lastUpdatedDate|submittedDate (maps to --sort).",
+    ),
     sort_order: str = typer.Option("descending", "--sort-order", help="ascending|descending"),
     # Date filtering
     date_from: Optional[str] = typer.Option(None, "--from", help="Published date from (YYYY-MM-DD), inclusive"),
@@ -72,6 +77,20 @@ def search(
         "relevance": "relevance",
         "date": "submittedDate",
     }
+
+    # Backward compatibility: accept old --sort-by values.
+    if sort_by_legacy:
+        if sort_by_legacy == "relevance":
+            sort = "relevance"
+        elif sort_by_legacy == "submittedDate":
+            sort = "date"
+        elif sort_by_legacy == "lastUpdatedDate":
+            # Keep access to API capability via legacy flag.
+            sort_by_map["date"] = "lastUpdatedDate"
+            sort = "date"
+        else:
+            raise typer.BadParameter("--sort-by must be relevance|lastUpdatedDate|submittedDate")
+
     if sort not in sort_by_map:
         raise typer.BadParameter("--sort must be 'relevance' or 'date'")
 

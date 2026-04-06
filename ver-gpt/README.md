@@ -57,19 +57,25 @@ arxiv download --batch docs/batch_ids.txt --output-dir ./papers
 ### 1) Raw запрос (как в документации arXiv)
 
 ```bash
-arxiv "cat:cs.CL AND au:Smith" --per-page 5 --sort date
+arxiv search "cat:cs.CL AND au:Smith" --per-page 5 --sort date
+```
+
+(Back-compat) Старый вариант тоже поддерживается:
+
+```bash
+arxiv search "cat:cs.CL AND all:transformer" --max-results 2 --sort-by submittedDate --format text
 ```
 
 ### 2) Запрос из флагов (повторяемые `--author`, `--category`)
 
 ```bash
-arxiv --author "Yoshua Bengio" --category cs.LG --per-page 5 --sort date
+arxiv search --author "Yoshua Bengio" --category cs.LG --per-page 5 --sort date
 ```
 
 ### 3) Категория + full-text терм + диапазон дат + компактный формат
 
 ```bash
-arxiv --category cs.CL --all transformer \
+arxiv search --category cs.CL --all transformer \
   --from 2026-04-01 --to 2026-04-05 \
   --page 1 --per-page 10 --sort date \
   --format compact
@@ -78,11 +84,11 @@ arxiv --category cs.CL --all transformer \
 ### 4) Таблица (по умолчанию)
 
 ```bash
-arxiv --category cs.CL --all transformer --per-page 5 --sort date --format table
+arxiv search --category cs.CL --all transformer --per-page 5 --sort date --format table
 ```
 
 ### 5) JSON
 
 ```bash
-arxiv --category cs.CL --all transformer --per-page 2 --json
+arxiv search --category cs.CL --all transformer --per-page 2 --json
 ```
