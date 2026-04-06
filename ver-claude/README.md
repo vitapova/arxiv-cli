@@ -18,6 +18,31 @@ cd ver-claude
 pip install -e .
 ```
 
+## Разработка и тестирование
+
+```bash
+# Установка dev-зависимостей
+pip install -r requirements.txt
+
+# Запуск тестов
+pytest tests/ -v
+
+# Запуск с покрытием
+pytest tests/ --cov=arxiv_cli --cov-report=term-missing
+
+# Быстрый запуск (без реальных API-запросов)
+pytest tests/ -v -k "not real"
+```
+
+**Текущее покрытие тестами:** 44% (30 тестов)
+
+Тестируются:
+- ✅ API-клиент (запросы, парсинг URL)
+- ✅ Парсер XML (структура, поля, реальные данные)
+- ✅ Команды (search, download, export)
+- ✅ Форматтеры (BibTeX, CSL, таблицы)
+- ✅ Библиотека статей (добавление, фильтрация)
+
 ## Использование
 
 **Текущий статус реализации:** ✅ `download`, `search`, `export` | 🚧 `digest`, `watch`
