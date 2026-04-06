@@ -37,24 +37,9 @@ pip install -e .
 
 ## Примеры
 
-### Download одного PDF по id
+### `search`
 
-```bash
-arxiv download 2604.03199v1 --output-dir ./papers
-```
-
-Именование файла: `{id}_{first_author}_{year}.pdf`
-
-### Batch download из файла
-
-```bash
-arxiv download --batch docs/batch_ids.txt --output-dir ./papers
-```
-
-Формат batch-файла: 1 id на строку, `#` — комментарии.
-
-
-### 1) Raw запрос (как в документации arXiv)
+#### 1) Raw запрос (как в документации arXiv)
 
 ```bash
 arxiv search "cat:cs.CL AND au:Smith" --per-page 5 --sort date
@@ -66,13 +51,13 @@ arxiv search "cat:cs.CL AND au:Smith" --per-page 5 --sort date
 arxiv search "cat:cs.CL AND all:transformer" --max-results 2 --sort-by submittedDate --format text
 ```
 
-### 2) Запрос из флагов (повторяемые `--author`, `--category`)
+#### 2) Запрос из флагов (повторяемые `--author`, `--category`)
 
 ```bash
 arxiv search --author "Yoshua Bengio" --category cs.LG --per-page 5 --sort date
 ```
 
-### 3) Категория + full-text терм + диапазон дат + компактный формат
+#### 3) Категория + full-text терм + диапазон дат + компактный формат
 
 ```bash
 arxiv search --category cs.CL --all transformer \
@@ -81,14 +66,32 @@ arxiv search --category cs.CL --all transformer \
   --format compact
 ```
 
-### 4) Таблица (по умолчанию)
+#### 4) Таблица (по умолчанию)
 
 ```bash
 arxiv search --category cs.CL --all transformer --per-page 5 --sort date --format table
 ```
 
-### 5) JSON
+#### 5) JSON
 
 ```bash
 arxiv search --category cs.CL --all transformer --per-page 2 --json
 ```
+
+### `download`
+
+#### 1) Download одного PDF по id
+
+```bash
+arxiv download 2604.03199v1 --output-dir ./papers
+```
+
+Именование файла: `{id}_{first_author}_{year}.pdf`
+
+#### 2) Batch download из файла
+
+```bash
+arxiv download --batch docs/batch_ids.txt --output-dir ./papers
+```
+
+Формат batch-файла: 1 id на строку, `#` — комментарии.
