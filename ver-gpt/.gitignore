@@ -1,0 +1,13 @@
+# build
+/bin/
+/dist/
+
+# local
+*.log
+*.tmp
+.DS_Store
+
+# go
+*.test
+*.out
+/vendor/
