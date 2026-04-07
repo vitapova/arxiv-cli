@@ -176,7 +176,12 @@ def search(
     try:
         papers = client.search(q, user_agent=user_agent)
     except Exception as e:
-        raise typer.Exit(code=2) from e
+        typer.echo(f"ERR\t{type(e).__name__}: {e}")
+        raise typer.Exit(code=2)
+
+    if not papers:
+        typer.echo("No results (0). If this is unexpected, it might be a transient arXiv/API issue; try again later or increase --per-page/--max-results.")
+        return
 
     if from_date or to_date:
         filtered = []

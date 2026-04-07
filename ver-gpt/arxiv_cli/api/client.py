@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+import time
 
 from .parser import parse_feed
 
@@ -29,9 +31,17 @@ class ArxivQuery:
 
 
 class ArxivClient:
-    def __init__(self, base_url: str = ARXIV_API_URL, timeout_s: float = 20.0):
+    def __init__(
+        self,
+        base_url: str = ARXIV_API_URL,
+        timeout_s: float = 20.0,
+        retries: int = 2,
+        backoff_s: float = 2.0,
+    ):
         self.base_url = base_url
         self.timeout_s = timeout_s
+        self.retries = retries
+        self.backoff_s = backoff_s
 
     def build_url(self, q: ArxivQuery) -> str:
         params = {
@@ -52,8 +62,35 @@ class ArxivClient:
             headers["User-Agent"] = user_agent
 
         req = Request(url, headers=headers, method="GET")
-        with urlopen(req, timeout=self.timeout_s) as resp:
-            xml_bytes = resp.read()
 
-        xml_text = xml_bytes.decode("utf-8", errors="replace")
-        return parse_feed(xml_text)
+        last_err: Exception | None = None
+        for attempt in range(self.retries + 1):
+            try:
+                with urlopen(req, timeout=self.timeout_s) as resp:
+                    xml_bytes = resp.read()
+                xml_text = xml_bytes.decode("utf-8", errors="replace")
+                return parse_feed(xml_text)
+            except HTTPError as e:
+                last_err = e
+                # Retry transient server errors and rate limiting.
+                if e.code in {429, 500, 502, 503, 504} and attempt < self.retries:
+                    time.sleep(self.backoff_s * (2**attempt))
+                    continue
+                raise
+            except URLError as e:
+                last_err = e
+                if attempt < self.retries:
+                    time.sleep(self.backoff_s * (2**attempt))
+                    continue
+                raise
+            except Exception as e:
+                last_err = e
+                if attempt < self.retries:
+                    time.sleep(self.backoff_s * (2**attempt))
+                    continue
+                raise
+
+        # Should be unreachable
+        if last_err:
+            raise last_err
+        return []
