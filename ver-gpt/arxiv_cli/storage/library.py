@@ -27,6 +27,16 @@ class Library:
     def __init__(self, path: Path | None = None):
         self.path = path or get_paths().library_path
 
+    def remove_by_base_id(self, base_id: str) -> int:
+        """Remove all versions for a base id. Returns number removed."""
+        items = self.load()
+        before = len(items)
+        items = [it for it in items if it.arxiv_id != base_id and not it.arxiv_id.startswith(base_id + "v")]
+        removed = before - len(items)
+        if removed:
+            self.save(items)
+        return removed
+
     def load(self) -> list[ArticleRecord]:
         if not self.path.exists():
             return []

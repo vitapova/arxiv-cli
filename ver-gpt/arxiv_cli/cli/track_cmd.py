@@ -97,7 +97,10 @@ def add_track_commands(app: typer.Typer) -> None:
             if latest_v <= current_v:
                 continue
 
-            # Update record in library to the latest version + refreshed metadata
+            # Update record in library to the latest version + refreshed metadata.
+            # Important: remove older versions for this base_id to avoid duplicates.
+            lib.remove_by_base_id(base_id)
+
             new_rec = ArticleRecord(
                 arxiv_id=latest.arxiv_id,
                 title=latest.title,
