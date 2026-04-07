@@ -45,7 +45,7 @@ pytest tests/ -v -k "not real"
 
 ## Использование
 
-**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info` | 🚧 `digest`, `track`, `subscribe`
+**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info`, `track` | 🚧 `digest`, `subscribe`
 
 ### Скачивание PDF статей
 
@@ -277,14 +277,48 @@ python3 -m arxiv_cli.cli list --status unread --tag gpt --table
 - `★` — в избранном
 - `☆` — не в избранном
 
+### Отслеживание версий статей
+
+```bash
+# Добавить статью в отслеживание
+python3 -m arxiv_cli.cli track add 1706.03762 --tag transformers
+
+# Показать все отслеживаемые статьи
+python3 -m arxiv_cli.cli track list
+
+# Проверить обновления всех отслеживаемых статей
+python3 -m arxiv_cli.cli track update
+
+# Проверить обновления конкретной статьи
+python3 -m arxiv_cli.cli track update 1706.03762
+
+# Показать историю версий
+python3 -m arxiv_cli.cli track versions 1706.03762
+
+# Убрать из отслеживания
+python3 -m arxiv_cli.cli track remove 1706.03762
+```
+
+**Возможности:**
+- Автоматическое отслеживание новых версий препринтов
+- История версий с датами обновления и проверки
+- Массовая проверка обновлений (`track update`)
+- Пометки новых версий в истории
+
+**Как работает:**
+1. `track add` — добавляет статью в отслеживание, сохраняет текущую версию
+2. `track update` — проверяет arXiv API на наличие новых версий
+3. При обновлении автоматически:
+   - Обновляет метаданные (title, abstract, authors)
+   - Сохраняет историю версий
+   - Помечает новую версию маркером [NEW]
+4. `track versions` — показывает всю историю с датами
+
 ### Команды в разработке
 
 ```bash
 # Дайджест за последнюю неделю (TODO)
 python3 -m arxiv_cli.cli digest --period week --category cs.AI
-
-# Отслеживание статей (TODO)
-python3 -m arxiv_cli.cli track add 1706.03762
 
 # Подписки (TODO)
 python3 -m arxiv_cli.cli subscribe add --query "LLM agents" --category cs.AI

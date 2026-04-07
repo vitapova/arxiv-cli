@@ -312,6 +312,163 @@ def info(arxiv_id, library, add_tag, remove_tag):
         raise click.Abort()
 
 
+@cli.group()
+def track():
+    """Отслеживание версий статей."""
+    pass
+
+
+@track.command(name='add')
+@click.argument('arxiv_id')
+@click.option('--tag', '-t', multiple=True, help='Теги для статьи')
+def track_add_cmd(arxiv_id, tag):
+    """Добавить статью в отслеживание."""
+    from arxiv_cli.commands.track import track_add
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        click.echo(f'Добавление статьи {arxiv_id} в отслеживание...')
+        
+        tags = list(tag) if tag else None
+        entry = track_add(arxiv_id, tags=tags)
+        
+        click.echo()
+        click.echo(f'✓ Добавлено в отслеживание')
+        click.echo()
+        click.echo(f'ID: {entry["id"]}')
+        click.echo(f'Название: {entry["title"]}')
+        click.echo(f'Версия: {entry["updated"][:10]}')
+        if tags:
+            click.echo(f'Теги: {", ".join(tags)}')
+        click.echo()
+        click.echo('Используйте "track update" для проверки обновлений')
+        
+    except ArxivAPIError as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@track.command(name='remove')
+@click.argument('arxiv_id')
+def track_remove_cmd(arxiv_id):
+    """Убрать статью из отслеживания."""
+    from arxiv_cli.commands.track import track_remove
+    
+    try:
+        if track_remove(arxiv_id):
+            click.echo(f'✓ Статья {arxiv_id} убрана из отслеживания')
+        else:
+            click.echo(f'✗ Статья {arxiv_id} не найдена', err=True)
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@track.command(name='update')
+@click.argument('arxiv_id', required=False)
+def track_update_cmd(arxiv_id):
+    """Проверить обновления отслеживаемых статей."""
+    from arxiv_cli.commands.track import track_update
+    
+    try:
+        if arxiv_id:
+            click.echo(f'Проверка обновлений для {arxiv_id}...')
+        else:
+            click.echo('Проверка обновлений для всех отслеживаемых статей...')
+        
+        updates = track_update(arxiv_id=arxiv_id)
+        
+        if not updates:
+            click.echo('✓ Новых версий не найдено')
+            return
+        
+        click.echo()
+        click.echo(f'Найдено обновлений: {len(updates)}')
+        click.echo()
+        
+        for update in updates:
+            click.echo(f'📄 {update["base_id"]}')
+            click.echo(f'   {update["title"][:70]}...')
+            click.echo(f'   {update["old_version"]} ({update["old_date"]}) → {update["new_version"]} ({update["new_date"]})')
+            click.echo()
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@track.command(name='versions')
+@click.argument('arxiv_id')
+def track_versions_cmd(arxiv_id):
+    """Показать историю версий статьи."""
+    from arxiv_cli.commands.track import track_versions
+    
+    try:
+        entry = track_versions(arxiv_id)
+        
+        if not entry:
+            click.echo(f'✗ Статья {arxiv_id} не найдена в отслеживании', err=True)
+            return
+        
+        click.echo('=' * 80)
+        click.echo(f'История версий: {entry["title"][:60]}...')
+        click.echo('=' * 80)
+        click.echo()
+        
+        history = entry.get('version_history', [])
+        
+        if not history:
+            click.echo('История версий не найдена')
+            return
+        
+        for i, version in enumerate(reversed(history), 1):
+            is_current = (i == 1)
+            marker = '→' if is_current else ' '
+            new_badge = ' [NEW]' if version.get('is_new', False) else ''
+            
+            click.echo(f'{marker} v{len(history) - i + 1}: {version["id"]}')
+            click.echo(f'   Обновлено: {version["updated"][:10]}')
+            click.echo(f'   Проверено: {version["checked_at"][:10]}{new_badge}')
+            click.echo()
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@track.command(name='list')
+def track_list_cmd():
+    """Показать все отслеживаемые статьи."""
+    from arxiv_cli.commands.track import track_list
+    
+    try:
+        entries = track_list()
+        
+        if not entries:
+            click.echo('Нет отслеживаемых статей')
+            click.echo('\nДобавьте статью: track add <arxiv_id>')
+            return
+        
+        click.echo(f'Отслеживаемых статей: {len(entries)}')
+        click.echo()
+        click.echo(f'{"ID":<15} {"Версия":<12} {"Название"}')
+        click.echo('=' * 80)
+        
+        for entry in entries:
+            arxiv_id = entry['id']
+            version_date = entry['updated'][:10]
+            title = entry['title']
+            if len(title) > 45:
+                title = title[:42] + '...'
+            
+            click.echo(f'{arxiv_id:<15} {version_date:<12} {title}')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
 @cli.command()
 def watch():
     """Управление отслеживанием обновлений."""
