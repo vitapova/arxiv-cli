@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from arxiv_cli.api.client import ArxivClient, ArxivQuery
+from arxiv_cli.api.rate_limit import RateLimiter
 from arxiv_cli.storage.subscriptions import (
     Subscription,
     SubscriptionsState,
@@ -80,6 +81,11 @@ def add_subscribe_commands(app: typer.Typer) -> None:
     def check(
         max_results: int = typer.Option(25, "--max-results", help="Results to fetch per subscription"),
         show_summary: bool = typer.Option(False, "--summary", help="Include summary in output"),
+        min_interval_s: float = typer.Option(
+            3.0,
+            "--min-interval",
+            help="Minimum seconds between API requests (rate limiting)",
+        ),
     ) -> None:
         subs = SubscriptionsStore().load()
         if not subs:
@@ -88,6 +94,7 @@ def add_subscribe_commands(app: typer.Typer) -> None:
 
         state = SubscriptionsState()
         client = ArxivClient(timeout_s=60.0)
+        limiter = RateLimiter(min_interval_s=min_interval_s)
 
         total_new = 0
         for s in subs:
@@ -101,6 +108,7 @@ def add_subscribe_commands(app: typer.Typer) -> None:
             )
 
             try:
+                limiter.sleep_if_needed()
                 papers = client.search(q)
             except Exception as e:
                 typer.echo(f"\n# Subscription {s.id}: query={search_q}\n")
