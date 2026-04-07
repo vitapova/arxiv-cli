@@ -178,6 +178,141 @@ def list_cmd(status, category, tag, search, sort, order, table, compact, mark_re
 
 
 @cli.command()
+@click.argument('arxiv_id')
+@click.option('--tag', '-t', multiple=True, help='Теги для статьи')
+@click.option('--status', type=click.Choice(['read', 'unread']), default='unread', help='Статус статьи')
+def add(arxiv_id, tag, status):
+    """Добавить статью в библиотеку (без скачивания PDF)."""
+    from arxiv_cli.commands.manage import add_to_library
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        click.echo(f'Добавление статьи {arxiv_id} в библиотеку...')
+        
+        tags = list(tag) if tag else None
+        entry = add_to_library(arxiv_id, tags=tags, status=status)
+        
+        click.echo()
+        click.echo(f'✓ Добавлено в библиотеку')
+        click.echo()
+        click.echo(f'ID: {entry["id"]}')
+        click.echo(f'Название: {entry["title"]}')
+        click.echo(f'Авторы: {", ".join(entry["authors"][:3])}{"..." if len(entry["authors"]) > 3 else ""}')
+        click.echo(f'Категория: {entry["primary_category"]}')
+        if tags:
+            click.echo(f'Теги: {", ".join(tags)}')
+        click.echo(f'Статус: {status}')
+        
+    except ArxivAPIError as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.argument('arxiv_id')
+def remove(arxiv_id):
+    """Удалить статью из библиотеки."""
+    from arxiv_cli.commands.manage import remove_from_library
+    
+    try:
+        if click.confirm(f'Удалить статью {arxiv_id} из библиотеки?'):
+            if remove_from_library(arxiv_id):
+                click.echo(f'✓ Статья {arxiv_id} удалена из библиотеки')
+            else:
+                click.echo(f'✗ Статья {arxiv_id} не найдена в библиотеке', err=True)
+        else:
+            click.echo('Отменено')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@cli.command()
+@click.argument('arxiv_id')
+@click.option('--library', is_flag=True, help='Показать информацию из библиотеки')
+@click.option('--add-tag', multiple=True, help='Добавить тег')
+@click.option('--remove-tag', multiple=True, help='Удалить тег')
+def info(arxiv_id, library, add_tag, remove_tag):
+    """Показать детальную информацию о статье."""
+    from arxiv_cli.commands.manage import get_info, manage_tags
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        # Управление тегами
+        if add_tag or remove_tag:
+            manage_tags(
+                arxiv_id,
+                add=list(add_tag) if add_tag else None,
+                remove=list(remove_tag) if remove_tag else None
+            )
+            click.echo(f'✓ Теги обновлены')
+            return
+        
+        # Получаем информацию
+        entry = get_info(arxiv_id, from_library=library)
+        
+        # Вывод
+        click.echo('=' * 80)
+        click.echo(f'ID: {entry["id"]}')
+        click.echo(f'Название: {entry["title"]}')
+        click.echo()
+        
+        # Авторы
+        click.echo(f'Авторы ({len(entry["authors"])}):\n  {", ".join(entry["authors"])}')
+        click.echo()
+        
+        # Категории
+        click.echo(f'Категории: {", ".join(entry["categories"])}')
+        click.echo(f'Основная: {entry["primary_category"]}')
+        click.echo()
+        
+        # Даты
+        click.echo(f'Опубликовано: {entry["published"][:10]}')
+        if entry.get('updated'):
+            click.echo(f'Обновлено: {entry["updated"][:10]}')
+        
+        # Информация из библиотеки
+        if library or entry.get('added_at'):
+            click.echo()
+            click.echo('--- Библиотека ---')
+            if entry.get('added_at'):
+                click.echo(f'Добавлено: {entry["added_at"][:10]}')
+            if entry.get('status'):
+                status_icon = '✓' if entry['status'] == 'read' else '○'
+                click.echo(f'Статус: {status_icon} {entry["status"]}')
+            if entry.get('starred'):
+                click.echo(f'Избранное: ★')
+            if entry.get('tags'):
+                click.echo(f'Теги: {", ".join(entry["tags"])}')
+            if entry.get('read_at'):
+                click.echo(f'Прочитано: {entry["read_at"][:10]}')
+        
+        # Ссылки
+        click.echo()
+        click.echo(f'PDF: {entry["pdf_url"]}')
+        click.echo(f'Abstract: {entry["abs_url"]}')
+        
+        # DOI и комментарии
+        if entry.get('doi'):
+            click.echo(f'DOI: {entry["doi"]}')
+        if entry.get('comment'):
+            click.echo(f'Комментарий: {entry["comment"]}')
+        if entry.get('journal_ref'):
+            click.echo(f'Журнал: {entry["journal_ref"]}')
+        
+        # Аннотация
+        click.echo()
+        click.echo('Аннотация:')
+        click.echo(entry["abstract"])
+        click.echo('=' * 80)
+        
+    except ArxivAPIError as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@cli.command()
 def watch():
     """Управление отслеживанием обновлений."""
     # TODO: реализация

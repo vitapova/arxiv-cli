@@ -45,7 +45,7 @@ pytest tests/ -v -k "not real"
 
 ## Использование
 
-**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list` | 🚧 `digest`, `track`, `subscribe`
+**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info` | 🚧 `digest`, `track`, `subscribe`
 
 ### Скачивание PDF статей
 
@@ -195,6 +195,31 @@ python3 -m arxiv_cli.cli export --all --category cs.AI --tag transformers --form
 **Форматы экспорта:**
 - **BibTeX** — для LaTeX, JabRef
 - **CSL JSON** — для Zotero, Mendeley, Citation.js
+
+### Быстрое управление библиотекой
+
+```bash
+# Добавить статью в библиотеку (без скачивания PDF)
+python3 -m arxiv_cli.cli add 2103.00020 --tag multimodal --tag vision
+
+# Добавить как прочитанную
+python3 -m arxiv_cli.cli add 1706.03762 --status read
+
+# Показать информацию о статье (из API)
+python3 -m arxiv_cli.cli info 2212.08073
+
+# Показать информацию из библиотеки
+python3 -m arxiv_cli.cli info 1706.03762 --library
+
+# Добавить теги к существующей статье
+python3 -m arxiv_cli.cli info 2103.00020 --add-tag openai --add-tag clip
+
+# Удалить теги
+python3 -m arxiv_cli.cli info 2103.00020 --remove-tag multimodal
+
+# Удалить статью из библиотеки
+python3 -m arxiv_cli.cli remove 2005.14165
+```
 
 ### Управление библиотекой статей
 

@@ -162,10 +162,35 @@ def remove_entry(arxiv_id):
     
     Args:
         arxiv_id: идентификатор статьи
+        
+    Returns:
+        bool: True если статья была удалена, False если не найдена
     """
     library = load_library()
+    initial_count = len(library['entries'])
     library['entries'] = [e for e in library['entries'] if e['id'] != arxiv_id]
-    save_library(library)
+    
+    if len(library['entries']) < initial_count:
+        save_library(library)
+        return True
+    return False
+
+
+def get_entry(arxiv_id):
+    """
+    Получение статьи из библиотеки по ID.
+    
+    Args:
+        arxiv_id: идентификатор статьи
+        
+    Returns:
+        dict: данные статьи или None
+    """
+    library = load_library()
+    for entry in library['entries']:
+        if entry['id'] == arxiv_id:
+            return entry
+    return None
 
 
 def add_tags(arxiv_id, tags):
