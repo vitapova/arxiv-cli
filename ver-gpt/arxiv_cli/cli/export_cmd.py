@@ -18,7 +18,7 @@ def add_export_command(app: typer.Typer) -> None:
         library_path: Path = typer.Option(
             default_library_path(),
             "--library",
-            help="Path to local library JSON (default: ./.arxiv-cli-library.json)",
+            help="Path to local library JSON (default: OS data dir library.json)",
         ),
         tag: list[str] = typer.Option([], "--tag", help="Filter by tag (repeatable)"),
         category: list[str] = typer.Option([], "--category", "--cat", help="Filter by category (repeatable)"),

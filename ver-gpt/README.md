@@ -23,8 +23,13 @@
   - фильтры: `--tag`, `--category`
   - экспорт всей библиотеки по умолчанию
 
-- `arxiv track add` — добавление статьи в локальную библиотеку (fetch метаданных из arXiv)
-  - задаёт `added_at`, `status`, `tags`
+- `arxiv track` — управление локальной библиотекой
+  - `track add` — добавление статьи (fetch метаданных из arXiv), задаёт `added_at`, `status`, `tags`
+  - `track remove` — удаление статьи
+  - `track update` — обновление метаданных при появлении новых версий (и замена старой версии на новую)
+  - `track versions` — история версий
+  - `track status --set` — статус `read|unread|starred`
+  - `track tag --add/--remove` — теги
 
 ## Команды
 
@@ -71,8 +76,10 @@ cd ver-gpt
 
 - `~/Library/Application Support/arxiv-cli/`
   - `library.json` — библиотека статей
-  - `subscriptions.json` — подписки (пока заглушка, будет)
-  - `state/` — состояние (last seen и т.п.)
+  - `subscriptions.json` — подписки
+  - `state/`
+    - `tracking.json` — история версий для `track versions`
+    - `subscriptions_state.json` — last-seen для `subscribe check`
 
 ## Примеры
 
@@ -135,6 +142,8 @@ arxiv download --batch docs/batch_ids.txt --output-dir ./papers
 
 Формат batch-файла: 1 id на строку, `#` — комментарии.
 
+Примечание: команда делает запрос метаданных к arXiv (для `first_author` и `year`), затем качает PDF.
+
 ### `list`
 
 ```bash
@@ -143,6 +152,19 @@ arxiv list --status unread --tag transformers --format compact
 arxiv list --from 2026-04-01 --to 2026-04-30 --sort added --order desc
 arxiv list --q memorization
 ```
+
+Примечание: `--from/--to` в `list` — это фильтр по **дате добавления** (`added_at`), а не по дате публикации.
+
+### `subscribe`
+
+```bash
+arxiv subscribe add --query "LLM agents" --category cs.AI
+arxiv subscribe list
+arxiv subscribe check --max-results 25 --min-interval 3 --retries-429 2 --backoff 15
+arxiv subscribe remove <id>
+```
+
+Примечание: `subscribe check` хранит состояние "уже видели" в `state/subscriptions_state.json`.
 
 ### `digest`
 
@@ -154,12 +176,14 @@ arxiv digest --period week --category cs.CL --keywords transformer --max-results
 arxiv digest --period day --category cs.AI --keywords agents --export digest.md
 ```
 
+Примечание: период фильтруется по `published` client-side после получения результатов (ограничены `--max-results`).
+
 ### `export`
 
-> Команда экспортирует **сохранённую локальную библиотеку** из JSON-файла
-> `./.arxiv-cli-library.json` (пока это минимальный формат хранения; позже сделаем `save/add`).
->
-> Пример структуры см. `docs/library.example.json`.
+Команда экспортирует **сохранённую локальную библиотеку** из файла `library.json` в OS data dir.
+Путь можно переопределить флагом `--library`.
+
+Пример структуры библиотеки (для ручного заполнения/отладки) см. `docs/library.example.json`.
 
 #### 1) Экспорт всей библиотеки в BibTeX
 
