@@ -46,7 +46,10 @@ pytest tests/ --cov=arxiv_cli --cov-report=term-missing
 pytest tests/ -v -k "not real"
 ```
 
-**Текущее покрытие тестами:** 88% функциональности (96 тестов)
+**Покрытие тестами:**  
+- **75%** — полное покрытие (все 1331 строка, включая CLI)  
+- **90%** — функциональность (758 строк, без CLI)  
+- **117 тестов** — все проходят ✅
 
 **Покрытие по модулям (без CLI/utils/config/date):**
 - ✅ API-клиент: 81% (retry logic, rate limits, error handling)
@@ -58,21 +61,31 @@ pytest tests/ -v -k "not real"
 - ✅ Отслеживание: 75% (версии, обновления, история)
 - ✅ Дайджесты: 76% (периоды, группировка, статистика)
 
-**Набор тестов (96 тестов):**
-- 5 тестов API
-- 4 теста парсера
-- 19 тестов команд (search, download, export, batch)
-- 11 тестов библиотеки (статусы, фильтры, сортировка, теги, stats)
-- 11 тестов форматтеров (search, library, digest)
-- 12 тестов подписок (add, list, check, remove)
-- 8 тестов отслеживания (add, versions, history, updates)
-- 5 тестов дайджестов (periods, grouping, stats)
-- 8 тестов управления (add, remove, info, tags)
-- 5 тестов list команды (фильтры, status, starred)
-- 4 теста rate limit handling
-- 4 теста обёрток команд (subscribe, track)
+**Типы тестов:**
 
-**CLI интерфейс (542 строки) не тестируется unit-тестами** — это стандартная практика для Click-приложений. Для тестирования CLI используются интеграционные тесты или ручное тестирование.
+**Unit-тесты (96):**
+- 5 — API client + rate limits
+- 4 — Parser
+- 22 — Commands (search, download, export, batch, errors)
+- 11 — Library (статусы, фильтры, сортировка, теги, stats)
+- 11 — Formatters (search, library, digest)
+- 12 — Subscriptions (add, list, check, remove)
+- 8 — Tracking (add, versions, history, updates)
+- 5 — Digest (periods, grouping, stats)
+- 8 — Manage (add, remove, info, tags)
+- 5 — List command (фильтры, status, starred)
+- 5 — Commands wrappers
+
+**Интеграционные тесты CLI (21):**
+- 4 — search (basic, category, compact, table)
+- 2 — download (simple, auto-name)
+- 1 — add
+- 4 — list (empty, entries, table, mark-read)
+- 2 — info (API, library)
+- 2 — export (stats, bibtex)
+- 3 — track (add, list, versions)
+- 2 — subscribe (add, list)
+- 1 — digest (help)
 
 ## Использование
 
