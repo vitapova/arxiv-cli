@@ -123,12 +123,13 @@ def digest(period, category, query, max, format, export):
         
         click.echo()
         
-        # Создаём дайджест
+        # Создаём дайджест (с verbose=True для показа повторов)
         digest_data = create_digest(
             period=period,
             categories=categories,
             query=query,
-            max_results=max
+            max_results=max,
+            verbose=True
         )
         
         if digest_data['total'] == 0:
@@ -597,7 +598,7 @@ def subscribe_check_cmd(sub_id):
     try:
         if sub_id:
             click.echo(f'Проверка подписки #{sub_id}...\n')
-            result = subscribe_check(sub_id)
+            result = subscribe_check(sub_id, verbose=True)
             
             if not result:
                 click.echo(f'✗ Подписка #{sub_id} не найдена')
@@ -606,7 +607,7 @@ def subscribe_check_cmd(sub_id):
             results = [result]
         else:
             click.echo('Проверка всех подписок...\n')
-            results = subscribe_check()
+            results = subscribe_check(verbose=True)
         
         if not results:
             click.echo('Нет подписок для проверки')

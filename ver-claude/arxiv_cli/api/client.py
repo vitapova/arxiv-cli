@@ -10,6 +10,7 @@ Endpoint: http://export.arxiv.org/api/query
 """
 
 import requests
+import time
 from urllib.parse import urlencode
 
 ARXIV_API_BASE = 'http://export.arxiv.org/api/query'
@@ -18,6 +19,11 @@ ARXIV_PDF_BASE = 'https://arxiv.org/pdf'
 
 class ArxivAPIError(Exception):
     """Ошибка при работе с arXiv API."""
+    pass
+
+
+class RateLimitError(ArxivAPIError):
+    """Превышен rate limit."""
     pass
 
 
@@ -31,9 +37,10 @@ class ArxivClient:
             'User-Agent': 'arxiv-cli/0.1.0'
         })
     
-    def search(self, query, start=0, max_results=20, sort_by='relevance', sort_order='descending'):
+    def search(self, query, start=0, max_results=20, sort_by='relevance', sort_order='descending', 
+               retry=True, max_retries=3, retry_delay=3, verbose=False):
         """
-        Поиск статей в arXiv.
+        Поиск статей в arXiv с автоматическими повторами при rate limit.
         
         Args:
             query: поисковый запрос
@@ -41,6 +48,10 @@ class ArxivClient:
             max_results: максимальное количество результатов
             sort_by: сортировка (relevance, lastUpdatedDate, submittedDate)
             sort_order: порядок (ascending, descending)
+            retry: включить автоматические повторы при 429
+            max_retries: максимальное количество попыток
+            retry_delay: задержка между попытками (секунды)
+            verbose: выводить информацию о повторах
             
         Returns:
             str: XML ответ от API
@@ -53,23 +64,52 @@ class ArxivClient:
             'sortOrder': sort_order
         }
         
-        try:
-            response = self.session.get(
-                ARXIV_API_BASE,
-                params=params,
-                timeout=self.timeout
-            )
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
-            raise ArxivAPIError(f'Ошибка при запросе к arXiv API: {e}')
+        last_error = None
+        
+        for attempt in range(max_retries if retry else 1):
+            try:
+                response = self.session.get(
+                    ARXIV_API_BASE,
+                    params=params,
+                    timeout=self.timeout
+                )
+                
+                # Проверяем rate limit
+                if response.status_code == 429:
+                    if not retry or attempt >= max_retries - 1:
+                        raise RateLimitError(f'arXiv API rate limit достигнут. Попробуйте через несколько секунд.')
+                    
+                    # Ждём перед повтором
+                    wait_time = retry_delay * (attempt + 1)
+                    if verbose:
+                        import sys
+                        print(f'⏳ Rate limit, ожидание {wait_time}с... (попытка {attempt + 1}/{max_retries})', file=sys.stderr)
+                    time.sleep(wait_time)
+                    continue
+                
+                response.raise_for_status()
+                return response.text
+                
+            except RateLimitError:
+                raise
+            except requests.RequestException as e:
+                last_error = e
+                if not retry or attempt >= max_retries - 1:
+                    raise ArxivAPIError(f'Ошибка при запросе к arXiv API: {e}')
+                
+                # Ждём перед повтором для других ошибок
+                time.sleep(retry_delay)
+        
+        if last_error:
+            raise ArxivAPIError(f'Ошибка после {max_retries} попыток: {last_error}')
     
-    def get_by_id(self, arxiv_id):
+    def get_by_id(self, arxiv_id, retry=True):
         """
         Получение статьи по ID.
         
         Args:
             arxiv_id: идентификатор статьи (например, 2301.12345)
+            retry: включить автоматические повторы при 429
             
         Returns:
             str: XML ответ от API
@@ -79,7 +119,7 @@ class ArxivClient:
         
         # Используем id_list для точного поиска по ID
         query = f'id:{arxiv_id}'
-        return self.search(query, max_results=1)
+        return self.search(query, max_results=1, retry=retry)
     
     def get_pdf_url(self, arxiv_id):
         """

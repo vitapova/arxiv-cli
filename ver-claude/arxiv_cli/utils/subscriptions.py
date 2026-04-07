@@ -150,12 +150,13 @@ def remove_subscription(sub_id):
     return False
 
 
-def check_subscription(sub_id):
+def check_subscription(sub_id, verbose=False):
     """
     Проверить обновления для подписки.
     
     Args:
         sub_id: ID подписки
+        verbose: выводить информацию о повторах
         
     Returns:
         dict: новые статьи и статистика
@@ -170,7 +171,8 @@ def check_subscription(sub_id):
         max_results=sub['max_results'],
         sort_by='submittedDate',
         sort_order='descending',
-        categories=sub['categories'] if sub['categories'] else None
+        categories=sub['categories'] if sub['categories'] else None,
+        verbose=verbose
     )
     
     # Получаем ID текущих результатов
@@ -201,10 +203,13 @@ def check_subscription(sub_id):
     }
 
 
-def check_all_subscriptions():
+def check_all_subscriptions(verbose=False):
     """
     Проверить все подписки.
     
+    Args:
+        verbose: выводить информацию о повторах
+        
     Returns:
         list: результаты проверки для каждой подписки
     """
@@ -212,7 +217,7 @@ def check_all_subscriptions():
     results = []
     
     for sub in subscriptions:
-        result = check_subscription(sub['id'])
+        result = check_subscription(sub['id'], verbose=verbose)
         if result:
             results.append(result)
     

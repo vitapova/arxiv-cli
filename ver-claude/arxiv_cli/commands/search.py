@@ -65,7 +65,7 @@ def build_search_query(query, categories=None, authors=None, title=None, date_fr
 
 def search_articles(query, max_results=10, sort_by='relevance', sort_order='descending',
                    categories=None, authors=None, title=None, start=0, 
-                   date_from=None, date_to=None):
+                   date_from=None, date_to=None, verbose=False):
     """
     Поиск статей в arXiv.
     
@@ -80,6 +80,7 @@ def search_articles(query, max_results=10, sort_by='relevance', sort_order='desc
         start: смещение для пагинации
         date_from: начальная дата (YYYY-MM-DD)
         date_to: конечная дата (YYYY-MM-DD)
+        verbose: выводить информацию о повторах
         
     Returns:
         dict: результаты поиска с метаданными
@@ -95,7 +96,8 @@ def search_articles(query, max_results=10, sort_by='relevance', sort_order='desc
         start=start,
         max_results=max_results,
         sort_by=sort_by,
-        sort_order=sort_order
+        sort_order=sort_order,
+        verbose=verbose
     )
     
     # Парсим результаты

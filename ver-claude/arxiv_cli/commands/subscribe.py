@@ -43,20 +43,21 @@ def subscribe_list():
     return list_subscriptions()
 
 
-def subscribe_check(sub_id=None):
+def subscribe_check(sub_id=None, verbose=False):
     """
     Проверить обновления.
     
     Args:
         sub_id: ID подписки (опционально, если None — проверяет все)
+        verbose: выводить информацию о повторах
         
     Returns:
         list или dict: результаты проверки
     """
     if sub_id:
-        return check_subscription(sub_id)
+        return check_subscription(sub_id, verbose=verbose)
     else:
-        return check_all_subscriptions()
+        return check_all_subscriptions(verbose=verbose)
 
 
 def subscribe_remove(sub_id):

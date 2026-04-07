@@ -82,7 +82,7 @@ def get_statistics(entries):
     }
 
 
-def create_digest(period='week', categories=None, query='', max_results=50):
+def create_digest(period='week', categories=None, query='', max_results=50, verbose=False):
     """
     Создание дайджеста новых публикаций.
     
@@ -91,6 +91,7 @@ def create_digest(period='week', categories=None, query='', max_results=50):
         categories: список категорий для фильтрации
         query: ключевые слова для поиска
         max_results: максимальное количество результатов
+        verbose: выводить информацию о повторах при rate limit
         
     Returns:
         dict: дайджест с данными
@@ -111,7 +112,8 @@ def create_digest(period='week', categories=None, query='', max_results=50):
         sort_order='descending',
         categories=categories,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
+        verbose=verbose
     )
     
     entries = results['entries']
