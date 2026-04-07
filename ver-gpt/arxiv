@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run arxiv-cli from the repo checkout.
+# - Uses ./ .venv if present.
+# - Falls back to system python.
+#
+# Usage (from ver-gpt/):
+#   ./arxiv --help
+#   ./arxiv search --category cs.CL --all transformer --per-page 3 --sort date
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Ensure local package is importable
+export PYTHONPATH="$DIR${PYTHONPATH:+:$PYTHONPATH}"
+
+PY="python3"
+if [[ -x "$DIR/.venv/bin/python" ]]; then
+  PY="$DIR/.venv/bin/python"
+fi
+
+exec "$PY" -m arxiv_cli.cli.main "$@"

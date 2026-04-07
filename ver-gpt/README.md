@@ -51,6 +51,18 @@ python3 -m venv .venv
 pip install -e .
 ```
 
+## Быстрый запуск без установки
+
+Если не хочется ставить пакет, можно запускать из репозитория:
+
+```bash
+cd ver-gpt
+./arxiv --help
+./arxiv search --category cs.CL --all transformer --per-page 3 --sort date
+```
+
+Скрипт `./arxiv` автоматически использует `./.venv/bin/python`, если venv создан.
+
 ## Локальное хранилище
 
 По умолчанию данные хранятся в user data dir ОС.
