@@ -82,6 +82,17 @@ class TestDownloadCommand:
         assert '1234.5678' in filename
         assert 'unknown' in filename
     
+    def test_generate_filename_with_version(self):
+        """Тест генерации имени с версией."""
+        entry = {
+            'id': '1706.03762v7',
+            'authors': ['Ashish Vaswani'],
+            'published': '2017-06-12'
+        }
+        
+        filename = generate_filename('1706.03762v7', entry)
+        assert '1706.03762v7' in filename or '1706.03762-v7' in filename
+    
     def test_download_pdf_real(self):
         """Тест реального скачивания PDF."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -101,6 +112,93 @@ class TestDownloadCommand:
             # Проверяем метаданные
             assert entry['title']
             assert len(entry['authors']) > 0
+    
+    def test_download_with_auto_name(self):
+        """Тест скачивания с автоименованием."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            file_path, entry = download_pdf(
+                '1706.03762',
+                output_dir=tmpdir,
+                auto_name=True,
+                save_to_library=False
+            )
+            
+            # Проверяем что файл создан с правильным именем
+            assert os.path.exists(file_path)
+            basename = os.path.basename(file_path)
+            assert '1706.03762' in basename
+            assert 'Vaswani' in basename or '2017' in basename
+    
+    def test_download_batch(self):
+        """Тест пакетного скачивания."""
+        from arxiv_cli.commands.download import download_batch
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Создаём batch-файл
+            batch_file = os.path.join(tmpdir, 'batch.txt')
+            with open(batch_file, 'w') as f:
+                f.write('# Test batch\n')
+                f.write('1706.03762\n')
+                f.write('2301.07041\n')
+            
+            # Скачиваем
+            results = download_batch(
+                batch_file,
+                output_dir=tmpdir,
+                save_to_library=False
+            )
+            
+            # Проверяем результаты
+            assert len(results) == 2
+            assert all(r[2] == 'success' for r in results)
+            
+            # Проверяем файлы
+            for arxiv_id, file_path, status, entry in results:
+                assert os.path.exists(file_path)
+                assert os.path.getsize(file_path) > 0
+    
+    def test_download_batch_with_errors(self):
+        """Тест пакетного скачивания с ошибками."""
+        from arxiv_cli.commands.download import download_batch
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Создаём batch с несуществующей статьёй
+            batch_file = os.path.join(tmpdir, 'batch.txt')
+            with open(batch_file, 'w') as f:
+                f.write('1706.03762\n')
+                f.write('9999.99999\n')  # Несуществующая
+            
+            results = download_batch(batch_file, output_dir=tmpdir, save_to_library=False)
+            
+            assert len(results) == 2
+            
+            # Первая успешна
+            assert results[0][2] == 'success'
+            
+            # Вторая с ошибкой
+            assert results[1][2] == 'error'
+    
+    def test_download_batch_empty_file(self):
+        """Тест пакетного скачивания пустого файла."""
+        from arxiv_cli.commands.download import download_batch
+        from arxiv_cli.api.client import ArxivAPIError
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            batch_file = os.path.join(tmpdir, 'empty.txt')
+            with open(batch_file, 'w') as f:
+                f.write('# Only comments\n')
+                f.write('# Nothing to download\n')
+            
+            with pytest.raises(ArxivAPIError):
+                download_batch(batch_file, output_dir=tmpdir)
+    
+    def test_download_batch_missing_file(self):
+        """Тест пакетного скачивания несуществующего файла."""
+        from arxiv_cli.commands.download import download_batch
+        from arxiv_cli.api.client import ArxivAPIError
+        
+        with pytest.raises(ArxivAPIError):
+            download_batch('/tmp/nonexistent_file.txt')
 
 
 class TestExportCommand:
@@ -128,6 +226,120 @@ class TestExportCommand:
         assert 'title' in data
         assert 'author' in data
         assert len(data['author']) > 0
+    
+    def test_export_library_bibtex(self):
+        """Тест экспорта библиотеки в BibTeX."""
+        from arxiv_cli.commands.export import export_library
+        from arxiv_cli.utils.library import add_entry
+        
+        # Добавляем статьи в библиотеку
+        entry1 = {
+            'id': '1111.1111',
+            'title': 'Test Paper 1',
+            'authors': ['Author 1'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        entry2 = {
+            'id': '2222.2222',
+            'title': 'Test Paper 2',
+            'authors': ['Author 2'],
+            'categories': ['cs.CL'],
+            'published': '2020-02-01',
+            'updated': '2020-02-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.CL',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry1, tags=['ai'])
+        add_entry(entry2, tags=['nlp'])
+        
+        # Экспортируем всё
+        result = export_library(format='bibtex')
+        
+        assert '@article{' in result
+        assert 'Test Paper 1' in result
+        assert 'Test Paper 2' in result
+    
+    def test_export_library_csl(self):
+        """Тест экспорта библиотеки в CSL."""
+        import json
+        from arxiv_cli.commands.export import export_library
+        from arxiv_cli.utils.library import add_entry, load_library
+        
+        entry = {
+            'id': '3333.3333',
+            'title': 'Test Paper CSL Export',
+            'authors': ['Test Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry)
+        
+        result = export_library(format='csl')
+        data = json.loads(result)
+        
+        assert isinstance(data, list)
+        assert len(data) >= 1
+        
+        # Находим нашу статью
+        our_paper = [p for p in data if 'CSL Export' in p.get('title', '')]
+        assert len(our_paper) == 1
+        assert our_paper[0]['title'] == 'Test Paper CSL Export'
+    
+    def test_export_library_with_filter(self):
+        """Тест экспорта с фильтром."""
+        from arxiv_cli.commands.export import export_library
+        from arxiv_cli.utils.library import add_entry
+        
+        entry1 = {
+            'id': '4444.4444',
+            'title': 'AI Paper',
+            'authors': ['Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        entry2 = {
+            'id': '5555.5555',
+            'title': 'NLP Paper',
+            'authors': ['Author'],
+            'categories': ['cs.CL'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.CL',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry1, tags=['ai'])
+        add_entry(entry2, tags=['nlp'])
+        
+        # Экспорт с фильтром по тегу
+        result = export_library(format='bibtex', tags=['ai'])
+        
+        assert 'AI Paper' in result
+        assert 'NLP Paper' not in result
 
 
 class TestLibrary:

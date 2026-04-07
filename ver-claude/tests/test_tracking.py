@@ -132,3 +132,90 @@ class TestTracking:
         history = get_version_history('3333.3333')
         assert history is not None
         assert len(history['version_history']) == 2
+    
+    def test_version_history_by_full_id(self):
+        """Тест поиска истории по полному ID с версией."""
+        from arxiv_cli.utils.library import add_entry
+        
+        entry = {
+            'id': '4444.4444v3',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-03-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com',
+            'tracked': True,
+            'version_history': [
+                {'id': '4444.4444v1', 'updated': '2020-01-01', 'checked_at': '2020-01-01'},
+                {'id': '4444.4444v2', 'updated': '2020-02-01', 'checked_at': '2020-02-01'},
+                {'id': '4444.4444v3', 'updated': '2020-03-01', 'checked_at': '2020-03-01'}
+            ]
+        }
+        
+        add_entry(entry)
+        
+        # Поиск по полному ID с версией
+        history = get_version_history('4444.4444v3')
+        assert history is not None
+        assert len(history['version_history']) == 3
+        
+        # Поиск по базовому ID
+        history = get_version_history('4444.4444')
+        assert history is not None
+    
+    def test_version_history_not_found(self):
+        """Тест несуществующей статьи."""
+        history = get_version_history('9999.9999')
+        assert history is None
+    
+    @patch('arxiv_cli.utils.tracking.ArxivClient')
+    def test_check_for_updates_no_changes(self, mock_client):
+        """Тест проверки без изменений."""
+        from arxiv_cli.utils.tracking import check_for_updates
+        from arxiv_cli.utils.library import add_entry
+        
+        # Добавляем статью
+        entry = {
+            'id': '5555.5555v1',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01T00:00:00Z',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com',
+            'tracked': True,
+            'version_history': [
+                {'id': '5555.5555v1', 'updated': '2020-01-01T00:00:00Z', 'checked_at': '2020-01-01'}
+            ]
+        }
+        
+        add_entry(entry)
+        
+        # Мокаем API — возвращаем ту же версию
+        mock_instance = mock_client.return_value
+        mock_instance.get_by_id.return_value = '''
+        <feed>
+            <entry>
+                <id>http://arxiv.org/abs/5555.5555v1</id>
+                <title>Test</title>
+                <author><name>Author</name></author>
+                <summary>Test</summary>
+                <published>2020-01-01T00:00:00Z</published>
+                <updated>2020-01-01T00:00:00Z</updated>
+                <link href="http://arxiv.org/abs/5555.5555v1"/>
+                <category term="cs.AI"/>
+            </entry>
+        </feed>
+        '''
+        
+        updates = check_for_updates()
+        
+        # Не должно быть обновлений
+        assert len(updates) == 0

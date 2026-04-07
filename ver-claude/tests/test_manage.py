@@ -106,3 +106,37 @@ class TestManage:
         # Несуществующая статья
         with pytest.raises(ArxivAPIError):
             get_info('9999.9999', from_library=True)
+    
+    def test_manage_tags(self):
+        """Тест управления тегами через manage."""
+        from arxiv_cli.commands.manage import manage_tags
+        from arxiv_cli.utils.library import add_entry, get_entry
+        
+        entry = {
+            'id': '7777.7777',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry, tags=['initial'])
+        
+        # Добавляем теги
+        manage_tags('7777.7777', add=['new1', 'new2'])
+        
+        result = get_entry('7777.7777')
+        assert 'new1' in result['tags']
+        assert 'new2' in result['tags']
+        
+        # Удаляем тег
+        manage_tags('7777.7777', remove=['new1'])
+        
+        result = get_entry('7777.7777')
+        assert 'new1' not in result['tags']
+        assert 'new2' in result['tags']

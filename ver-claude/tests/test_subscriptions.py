@@ -5,6 +5,7 @@
 import pytest
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 from arxiv_cli.utils.subscriptions import (
     add_subscription,
     list_subscriptions,
@@ -100,3 +101,56 @@ class TestSubscriptions:
         sub = add_subscription('query', max_results=50)
         
         assert sub['max_results'] == 50
+    
+    @patch('arxiv_cli.utils.subscriptions.search_articles')
+    def test_check_subscription_no_new(self, mock_search):
+        """Тест проверки без новых статей."""
+        from arxiv_cli.utils.subscriptions import check_subscription
+        
+        # Создаём подписку
+        sub = add_subscription('test query')
+        
+        # Мокаем поиск — возвращаем те же статьи
+        mock_search.return_value = {
+            'entries': [
+                {'id': '1111.1111', 'title': 'Paper 1'},
+                {'id': '2222.2222', 'title': 'Paper 2'}
+            ]
+        }
+        
+        # Первая проверка — все статьи новые
+        result = check_subscription(sub['id'])
+        assert result['new'] == 2
+        
+        # Вторая проверка — ничего нового
+        result = check_subscription(sub['id'])
+        assert result['new'] == 0
+    
+    @patch('arxiv_cli.utils.subscriptions.search_articles')
+    def test_check_subscription_with_new(self, mock_search):
+        """Тест проверки с новыми статьями."""
+        from arxiv_cli.utils.subscriptions import check_subscription
+        
+        sub = add_subscription('test query')
+        
+        # Первый запрос
+        mock_search.return_value = {
+            'entries': [
+                {'id': '1111.1111', 'title': 'Paper 1'}
+            ]
+        }
+        
+        result = check_subscription(sub['id'])
+        assert result['new'] == 1
+        
+        # Второй запрос — добавилась новая статья
+        mock_search.return_value = {
+            'entries': [
+                {'id': '1111.1111', 'title': 'Paper 1'},
+                {'id': '3333.3333', 'title': 'Paper 3'}
+            ]
+        }
+        
+        result = check_subscription(sub['id'])
+        assert result['new'] == 1
+        assert result['new_entries'][0]['id'] == '3333.3333'

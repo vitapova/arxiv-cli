@@ -137,3 +137,130 @@ class TestFormatter:
         # Название должно быть обрезано
         assert '...' in result
         assert len(result.split('\n')[2]) < 150  # Строка не должна быть слишком длинной
+    
+    def test_format_library_entry(self, sample_entry):
+        """Тест форматирования записи библиотеки."""
+        from arxiv_cli.utils.formatter import format_library_entry
+        
+        # Добавляем поля библиотеки
+        sample_entry['status'] = 'read'
+        sample_entry['starred'] = True
+        sample_entry['added_at'] = '2026-04-07T12:00:00'
+        sample_entry['tags'] = ['test', 'paper']
+        
+        result = format_library_entry(sample_entry, compact=False)
+        
+        assert '✓' in result  # read status
+        assert '★' in result  # starred
+        assert 'test' in result
+        assert 'paper' in result
+        assert sample_entry['title'] in result
+    
+    def test_format_library_entry_compact(self, sample_entry):
+        """Тест компактного форматирования библиотеки."""
+        from arxiv_cli.utils.formatter import format_library_entry
+        
+        sample_entry['status'] = 'unread'
+        sample_entry['starred'] = False
+        sample_entry['added_at'] = '2026-04-07T12:00:00'
+        
+        result = format_library_entry(sample_entry, compact=True)
+        
+        assert '○' in result  # unread
+        assert '☆' in result  # not starred
+        # Аннотация не должна быть в компактном формате
+        assert len(result) < len(format_library_entry(sample_entry, compact=False))
+    
+    def test_format_library_table(self, sample_entry):
+        """Тест табличного формата библиотеки."""
+        from arxiv_cli.utils.formatter import format_library_table
+        
+        sample_entry['status'] = 'read'
+        sample_entry['starred'] = False
+        sample_entry['added_at'] = '2026-04-07T12:00:00'
+        sample_entry['tags'] = ['nlp', 'transformers']
+        
+        result = format_library_table([sample_entry])
+        
+        assert 'St' in result
+        assert 'ID' in result
+        assert '✓' in result
+        assert 'nlp' in result or 'transformers' in result
+    
+    def test_format_digest_text(self):
+        """Тест текстового формата дайджеста."""
+        from arxiv_cli.utils.formatter import format_digest
+        
+        digest_data = {
+            'period': 'week',
+            'date_from': '2026-03-31',
+            'date_to': '2026-04-07',
+            'total': 2,
+            'statistics': {
+                'total': 2,
+                'by_category': {'cs.AI': 2}
+            },
+            'grouped': {
+                'cs.AI': [
+                    {
+                        'id': '1111.1111',
+                        'title': 'Test Paper',
+                        'authors': ['Author 1', 'Author 2'],
+                        'abstract': 'Test abstract',
+                        'published': '2026-04-01',
+                        'primary_category': 'cs.AI',
+                        'categories': ['cs.AI']
+                    }
+                ]
+            },
+            'entries': []
+        }
+        
+        result = format_digest(digest_data, format='text')
+        
+        assert 'Дайджест новых публикаций' in result
+        assert '2026-03-31' in result
+        assert '2026-04-07' in result
+        assert 'Всего статей: 2' in result
+        assert 'cs.AI' in result
+        assert 'Test Paper' in result
+    
+    def test_format_digest_markdown(self):
+        """Тест markdown формата дайджеста."""
+        from arxiv_cli.utils.formatter import format_digest
+        
+        digest_data = {
+            'period': 'day',
+            'date_from': '2026-04-06',
+            'date_to': '2026-04-07',
+            'total': 1,
+            'statistics': {
+                'total': 1,
+                'by_category': {'cs.CL': 1}
+            },
+            'grouped': {
+                'cs.CL': [
+                    {
+                        'id': '2222.2222',
+                        'title': 'Another Paper',
+                        'authors': ['Author'],
+                        'abstract': 'Abstract text',
+                        'published': '2026-04-07',
+                        'primary_category': 'cs.CL',
+                        'categories': ['cs.CL'],
+                        'pdf_url': 'https://example.com/pdf',
+                        'abs_url': 'https://example.com/abs'
+                    }
+                ]
+            },
+            'entries': []
+        }
+        
+        result = format_digest(digest_data, format='markdown')
+        
+        assert '# Дайджест' in result
+        assert '**Всего статей:** 1' in result
+        assert '## cs.CL' in result
+        assert '### Another Paper' in result
+        assert '**Авторы:**' in result
+        assert '- **ID:**' in result

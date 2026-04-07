@@ -221,3 +221,86 @@ class TestLibraryExtended:
         # Сортировка по дате
         results = get_entries(sort_by='published', sort_order='desc')
         assert results[0]['published'] == '2021-01-01'
+    
+    def test_add_and_remove_tags(self):
+        """Тест добавления и удаления тегов."""
+        from arxiv_cli.utils.library import add_tags, remove_tags
+        
+        entry = {
+            'id': '7777.7777',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.AI'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry, tags=['tag1'])
+        
+        # Добавляем теги
+        add_tags('7777.7777', ['tag2', 'tag3'])
+        
+        result = get_entry('7777.7777')
+        assert 'tag1' in result['tags']
+        assert 'tag2' in result['tags']
+        assert 'tag3' in result['tags']
+        
+        # Удаляем тег
+        remove_tags('7777.7777', ['tag2'])
+        
+        result = get_entry('7777.7777')
+        assert 'tag1' in result['tags']
+        assert 'tag2' not in result['tags']
+        assert 'tag3' in result['tags']
+    
+    def test_get_stats(self):
+        """Тест получения статистики."""
+        from arxiv_cli.utils.library import get_stats
+        
+        entry1 = {
+            'id': '8888.8888',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.AI', 'cs.LG'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.AI',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        entry2 = {
+            'id': '9999.9999',
+            'title': 'Test',
+            'authors': ['Author'],
+            'categories': ['cs.CL'],
+            'published': '2020-01-01',
+            'updated': '2020-01-01',
+            'abstract': 'Test',
+            'primary_category': 'cs.CL',
+            'pdf_url': 'https://example.com',
+            'abs_url': 'https://example.com'
+        }
+        
+        add_entry(entry1, tags=['ai'], status='read')
+        add_entry(entry2, tags=['nlp'], status='unread')
+        
+        # Отмечаем первую как starred
+        toggle_starred('8888.8888')
+        
+        stats = get_stats()
+        
+        assert stats['total'] == 2
+        assert stats['categories']['cs.AI'] == 1
+        assert stats['categories']['cs.CL'] == 1
+        assert stats['categories']['cs.LG'] == 1
+        assert stats['statuses']['read'] == 1
+        assert stats['statuses']['unread'] == 1
+        assert stats['starred'] == 1
+        assert 'ai' in stats['tags']
+        assert 'nlp' in stats['tags']

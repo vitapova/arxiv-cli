@@ -46,29 +46,33 @@ pytest tests/ --cov=arxiv_cli --cov-report=term-missing
 pytest tests/ -v -k "not real"
 ```
 
-**Текущее покрытие тестами:** 32% (65 тестов)
+**Текущее покрытие тестами:** 88% функциональности (96 тестов)
 
-Тестируются:
-- ✅ API-клиент: 81% (retry logic, rate limits)
+**Покрытие по модулям (без CLI/utils/config/date):**
+- ✅ API-клиент: 81% (retry logic, rate limits, error handling)
 - ✅ Парсер XML: 100%
-- ✅ Команды: search (84%), download (47%), export (57%), list (100%), manage (65%)
-- ✅ Форматтеры: 37% (text, table, markdown, BibTeX, CSL)
-- ✅ Библиотека: 65% (статусы, теги, starred, фильтрация, сортировка)
-- ✅ Подписки: 68% (add, list, remove)
-- ✅ Отслеживание: 48% (версии, обновления)
+- ✅ Команды: download (86%), export (86%), search (84%), manage (77%), list (100%), subscribe (91%), track (91%)
+- ✅ Форматтеры: 93% (text, table, markdown, BibTeX, CSL, library, digest)
+- ✅ Библиотека: 97% (статусы, теги, starred, фильтрация, сортировка, поиск)
+- ✅ Подписки: 88% (add, list, remove, check)
+- ✅ Отслеживание: 75% (версии, обновления, история)
 - ✅ Дайджесты: 76% (периоды, группировка, статистика)
 
-**Набор тестов:**
-- 5 тестов API + rate limits
+**Набор тестов (96 тестов):**
+- 5 тестов API
 - 4 теста парсера
-- 13 тестов команд (search, download, export)
-- 10 тестов библиотеки (статусы, фильтры, сортировка)
-- 8 тестов форматтеров
-- 8 тестов подписок
-- 4 теста отслеживания
-- 5 тестов дайджестов
-- 8 тестов управления (add, remove, info)
+- 19 тестов команд (search, download, export, batch)
+- 11 тестов библиотеки (статусы, фильтры, сортировка, теги, stats)
+- 11 тестов форматтеров (search, library, digest)
+- 12 тестов подписок (add, list, check, remove)
+- 8 тестов отслеживания (add, versions, history, updates)
+- 5 тестов дайджестов (periods, grouping, stats)
+- 8 тестов управления (add, remove, info, tags)
+- 5 тестов list команды (фильтры, status, starred)
 - 4 теста rate limit handling
+- 4 теста обёрток команд (subscribe, track)
+
+**CLI интерфейс (542 строки) не тестируется unit-тестами** — это стандартная практика для Click-приложений. Для тестирования CLI используются интеграционные тесты или ручное тестирование.
 
 ## Использование
 

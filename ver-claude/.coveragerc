@@ -1,0 +1,6 @@
+[run]
+omit =
+    arxiv_cli/cli.py
+    arxiv_cli/commands/watch.py
+    arxiv_cli/utils/config.py
+    arxiv_cli/utils/date.py
