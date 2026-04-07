@@ -32,7 +32,8 @@
 - `arxiv download` — скачивание PDF
 - `arxiv export` — экспорт библиографии
 - `arxiv track` — управление локальной библиотекой
-- (в планах) `arxiv list`, `arxiv digest`, `arxiv subscribe`
+- `arxiv list` — просмотр и поиск по локальной библиотеке
+- (в планах) `arxiv digest`, `arxiv subscribe`
 
 ## Источник данных
 
@@ -120,6 +121,15 @@ arxiv download --batch docs/batch_ids.txt --output-dir ./papers
 ```
 
 Формат batch-файла: 1 id на строку, `#` — комментарии.
+
+### `list`
+
+```bash
+arxiv list --format table
+arxiv list --status unread --tag transformers --format compact
+arxiv list --from 2026-04-01 --to 2026-04-30 --sort added --order desc
+arxiv list --q memorization
+```
 
 ### `export`
 
