@@ -517,11 +517,153 @@ def track_list_cmd():
         raise click.Abort()
 
 
-@cli.command()
-def watch():
-    """Управление отслеживанием обновлений."""
-    # TODO: реализация
-    click.echo('Watch command')
+@cli.group()
+def subscribe():
+    """Управление подписками на поисковые запросы."""
+    pass
+
+
+@subscribe.command(name='add')
+@click.option('--query', '-q', required=True, help='Поисковый запрос')
+@click.option('--category', '-c', multiple=True, help='Категории для фильтрации')
+@click.option('--name', '-n', help='Имя подписки')
+@click.option('--max', '-m', default=20, help='Максимум результатов')
+def subscribe_add_cmd(query, category, name, max):
+    """Создать подписку."""
+    from arxiv_cli.commands.subscribe import subscribe_add
+    
+    try:
+        categories = list(category) if category else None
+        
+        click.echo('Создание подписки...')
+        sub = subscribe_add(query, categories=categories, name=name, max_results=max)
+        
+        click.echo()
+        click.echo(f'✓ Подписка создана')
+        click.echo()
+        click.echo(f'ID: {sub["id"]}')
+        click.echo(f'Название: {sub["name"]}')
+        click.echo(f'Запрос: {sub["query"]}')
+        if categories:
+            click.echo(f'Категории: {", ".join(categories)}')
+        click.echo(f'Максимум результатов: {sub["max_results"]}')
+        click.echo()
+        click.echo('Используйте "subscribe check" для проверки обновлений')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@subscribe.command(name='list')
+def subscribe_list_cmd():
+    """Показать все подписки."""
+    from arxiv_cli.commands.subscribe import subscribe_list
+    
+    try:
+        subs = subscribe_list()
+        
+        if not subs:
+            click.echo('Нет подписок')
+            click.echo('\nСоздайте подписку: subscribe add --query "LLM agents"')
+            return
+        
+        click.echo(f'Подписок: {len(subs)}\n')
+        click.echo(f'{"ID":<5} {"Название":<30} {"Запрос":<30} {"Категории"}')
+        click.echo('=' * 100)
+        
+        for sub in subs:
+            sub_id = str(sub['id'])
+            name = sub['name'][:28] if len(sub['name']) > 28 else sub['name']
+            query = sub['query'][:28] if len(sub['query']) > 28 else sub['query']
+            cats = ', '.join(sub['categories'][:3]) if sub['categories'] else '-'
+            if len(sub['categories']) > 3:
+                cats += '...'
+            
+            click.echo(f'{sub_id:<5} {name:<30} {query:<30} {cats}')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@subscribe.command(name='check')
+@click.argument('sub_id', type=int, required=False)
+def subscribe_check_cmd(sub_id):
+    """Проверить обновления подписок."""
+    from arxiv_cli.commands.subscribe import subscribe_check
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        if sub_id:
+            click.echo(f'Проверка подписки #{sub_id}...\n')
+            result = subscribe_check(sub_id)
+            
+            if not result:
+                click.echo(f'✗ Подписка #{sub_id} не найдена')
+                return
+            
+            results = [result]
+        else:
+            click.echo('Проверка всех подписок...\n')
+            results = subscribe_check()
+        
+        if not results:
+            click.echo('Нет подписок для проверки')
+            return
+        
+        total_new = sum(r['new'] for r in results)
+        
+        if total_new == 0:
+            click.echo('✓ Новых статей не найдено')
+            return
+        
+        click.echo(f'Найдено новых статей: {total_new}\n')
+        
+        for result in results:
+            if result['new'] == 0:
+                continue
+            
+            sub = result['subscription']
+            click.echo(f"📬 {sub['name']} (#{sub['id']})")
+            click.echo(f"   Новых: {result['new']} из {result['total']}")
+            click.echo()
+            
+            for i, entry in enumerate(result['new_entries'][:5], 1):
+                click.echo(f"   [{i}] {entry['title'][:70]}...")
+                click.echo(f"       {entry['id']} | {entry['primary_category']} | {entry['published'][:10]}")
+            
+            if len(result['new_entries']) > 5:
+                click.echo(f"   ... и ещё {len(result['new_entries']) - 5}")
+            
+            click.echo()
+    
+    except ArxivAPIError as e:
+        click.echo(f'✗ Ошибка API: {e}', err=True)
+        raise click.Abort()
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@subscribe.command(name='remove')
+@click.argument('sub_id', type=int)
+def subscribe_remove_cmd(sub_id):
+    """Удалить подписку."""
+    from arxiv_cli.commands.subscribe import subscribe_remove
+    
+    try:
+        if click.confirm(f'Удалить подписку #{sub_id}?'):
+            if subscribe_remove(sub_id):
+                click.echo(f'✓ Подписка #{sub_id} удалена')
+            else:
+                click.echo(f'✗ Подписка #{sub_id} не найдена', err=True)
+        else:
+            click.echo('Отменено')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
 
 
 @cli.command()

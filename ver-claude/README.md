@@ -45,7 +45,7 @@ pytest tests/ -v -k "not real"
 
 ## Использование
 
-**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info`, `track`, `digest` | 🚧 `subscribe`
+**Текущий статус реализации:** ✅ ВСЕ КОМАНДЫ РЕАЛИЗОВАНЫ: `download`, `search`, `export`, `list`, `add`, `remove`, `info`, `track`, `digest`, `subscribe`
 
 ### Скачивание PDF статей
 
@@ -349,12 +349,51 @@ python3 -m arxiv_cli.cli digest --period week --category cs.CL --category cs.AI 
 - `--format` — формат: `text`, `markdown`
 - `-o, --export` — экспорт в файл
 
-### Команды в разработке
+### Подписки на поисковые запросы
 
 ```bash
-# Подписки (TODO)
+# Создать подписку
 python3 -m arxiv_cli.cli subscribe add --query "LLM agents" --category cs.AI
+
+# С именем
+python3 -m arxiv_cli.cli subscribe add --query "quantum computing" --name "Quantum Research"
+
+# Несколько категорий
+python3 -m arxiv_cli.cli subscribe add --query "transformer" --category cs.CL --category cs.AI
+
+# Показать все подписки
+python3 -m arxiv_cli.cli subscribe list
+
+# Проверить обновления всех подписок
+python3 -m arxiv_cli.cli subscribe check
+
+# Проверить конкретную подписку
+python3 -m arxiv_cli.cli subscribe check 1
+
+# Удалить подписку
+python3 -m arxiv_cli.cli subscribe remove 2
 ```
+
+**Возможности:**
+- Сохранённые поисковые запросы
+- Автоматическая проверка новых статей
+- Показывает только НОВЫЕ статьи (сравнение с прошлым запуском)
+- Поддержка категорий и ключевых слов
+- Отслеживание истории результатов
+
+**Как работает:**
+1. `subscribe add` — создаёт подписку с запросом
+2. `subscribe check` — выполняет поиск и сравнивает с прошлыми результатами
+3. Показывает только новые статьи (которых не было при прошлой проверке)
+4. Сохраняет ID последних результатов для следующего сравнения
+
+**Параметры:**
+- `-q, --query` — поисковый запрос (обязательно)
+- `-c, --category` — категории (можно несколько)
+- `-n, --name` — имя подписки (опционально)
+- `-m, --max` — максимум результатов (по умолчанию 20)
+
+**Хранение:** `~/.arxiv-cli/subscriptions.json`
 
 ## Структура проекта
 
