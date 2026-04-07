@@ -10,7 +10,6 @@
 
 from datetime import datetime, timedelta
 from collections import defaultdict
-from arxiv_cli.api.client import ArxivClient
 from arxiv_cli.commands.search import search_articles
 
 

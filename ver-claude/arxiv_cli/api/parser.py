@@ -10,7 +10,6 @@ arXiv API возвращает данные в формате Atom XML.
 """
 
 import feedparser
-from datetime import datetime
 
 
 def parse_search_results(xml_text):

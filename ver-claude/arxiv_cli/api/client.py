@@ -11,7 +11,6 @@ Endpoint: http://export.arxiv.org/api/query
 
 import requests
 import time
-from urllib.parse import urlencode
 
 ARXIV_API_BASE = 'http://export.arxiv.org/api/query'
 ARXIV_PDF_BASE = 'https://arxiv.org/pdf'

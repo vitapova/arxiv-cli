@@ -10,7 +10,6 @@
 """
 
 import os
-from pathlib import Path
 from arxiv_cli.api.client import ArxivClient, ArxivAPIError
 from arxiv_cli.api.parser import parse_search_results
 from arxiv_cli.utils.library import add_entry

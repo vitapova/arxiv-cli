@@ -14,7 +14,7 @@ import json
 from arxiv_cli.api.client import ArxivClient, ArxivAPIError
 from arxiv_cli.api.parser import parse_search_results
 from arxiv_cli.utils.formatter import format_bibtex, format_csl
-from arxiv_cli.utils.library import get_entries, get_stats
+from arxiv_cli.utils.library import get_entries
 
 
 def export_single(arxiv_id, format='bibtex'):
