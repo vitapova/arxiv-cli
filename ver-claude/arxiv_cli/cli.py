@@ -98,12 +98,60 @@ def search(query, max, page, per_page, sort, category, author, title, date_from,
 
 
 @cli.command()
-@click.option('--category', help='Категория arXiv')
-@click.option('--days', default=7, help='Количество дней назад')
-def digest(category, days):
+@click.option('--period', type=click.Choice(['day', 'week', 'month']), default='week', help='Период')
+@click.option('--category', '-c', multiple=True, help='Категории для фильтрации')
+@click.option('--query', '-q', default='', help='Ключевые слова')
+@click.option('--max', '-n', default=50, help='Максимальное количество статей')
+@click.option('--format', type=click.Choice(['text', 'markdown']), default='text', help='Формат вывода')
+@click.option('--export', '-o', help='Экспорт в файл')
+def digest(period, category, query, max, format, export):
     """Формирование дайджеста новых публикаций."""
-    # TODO: реализация
-    click.echo(f'Дайджест: category={category}, days={days}')
+    from arxiv_cli.commands.digest import create_digest
+    from arxiv_cli.utils.formatter import format_digest
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        categories = list(category) if category else None
+        
+        period_names = {'day': 'за день', 'week': 'за неделю', 'month': 'за месяц'}
+        click.echo(f'Создание дайджеста {period_names[period]}...')
+        
+        if categories:
+            click.echo(f'Категории: {", ".join(categories)}')
+        if query:
+            click.echo(f'Запрос: {query}')
+        
+        click.echo()
+        
+        # Создаём дайджест
+        digest_data = create_digest(
+            period=period,
+            categories=categories,
+            query=query,
+            max_results=max
+        )
+        
+        if digest_data['total'] == 0:
+            click.echo('✗ Статей не найдено за указанный период')
+            return
+        
+        # Форматируем
+        output = format_digest(digest_data, format=format)
+        
+        # Экспорт в файл
+        if export:
+            with open(export, 'w', encoding='utf-8') as f:
+                f.write(output)
+            click.echo(f'✓ Дайджест экспортирован в {export}')
+        else:
+            click.echo(output)
+    
+    except ArxivAPIError as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
 
 
 @cli.command(name='list')

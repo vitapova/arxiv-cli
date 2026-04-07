@@ -45,7 +45,7 @@ pytest tests/ -v -k "not real"
 
 ## Использование
 
-**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info`, `track` | 🚧 `digest`, `subscribe`
+**Текущий статус реализации:** ✅ `download`, `search`, `export`, `list`, `add`, `remove`, `info`, `track`, `digest` | 🚧 `subscribe`
 
 ### Скачивание PDF статей
 
@@ -314,12 +314,44 @@ python3 -m arxiv_cli.cli track remove 1706.03762
    - Помечает новую версию маркером [NEW]
 4. `track versions` — показывает всю историю с датами
 
+### Дайджесты новых публикаций
+
+```bash
+# Дайджест за неделю
+python3 -m arxiv_cli.cli digest --period week
+
+# Дайджест за день с фильтром по категории
+python3 -m arxiv_cli.cli digest --period day --category cs.AI --max 20
+
+# Дайджест с ключевыми словами
+python3 -m arxiv_cli.cli digest --period month --query "transformer" --max 10
+
+# Экспорт в Markdown
+python3 -m arxiv_cli.cli digest --period week --format markdown --export digest.md
+
+# Комбинация фильтров
+python3 -m arxiv_cli.cli digest --period week --category cs.CL --category cs.AI --query "attention" --max 15
+```
+
+**Возможности:**
+- Периоды: `day`, `week` (по умолчанию), `month`
+- Фильтрация по категориям и ключевым словам
+- Группировка результатов по категориям
+- Статистика (количество статей по категориям)
+- Форматы: `text` (консоль) и `markdown` (файл)
+- Экспорт в Markdown с полными аннотациями
+
+**Параметры:**
+- `--period` — период: `day`, `week`, `month`
+- `-c, --category` — категории (можно несколько)
+- `-q, --query` — ключевые слова
+- `-n, --max` — максимум статей (по умолчанию 50)
+- `--format` — формат: `text`, `markdown`
+- `-o, --export` — экспорт в файл
+
 ### Команды в разработке
 
 ```bash
-# Дайджест за последнюю неделю (TODO)
-python3 -m arxiv_cli.cli digest --period week --category cs.AI
-
 # Подписки (TODO)
 python3 -m arxiv_cli.cli subscribe add --query "LLM agents" --category cs.AI
 ```

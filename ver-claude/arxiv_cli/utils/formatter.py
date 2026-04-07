@@ -195,19 +195,131 @@ def format_library_table(entries):
     return '\n'.join(lines)
 
 
-def format_digest(entries, format='text'):
+def format_digest(digest_data, format='text'):
     """
     Форматирование дайджеста публикаций.
     
     Args:
-        entries: список статей
-        format: формат вывода (text/html/markdown)
+        digest_data: данные дайджеста (dict)
+        format: формат вывода (text/markdown)
         
     Returns:
         str: отформатированный дайджест
     """
-    # TODO: реализация
-    pass
+    if format == 'markdown':
+        return format_digest_markdown(digest_data)
+    else:
+        return format_digest_text(digest_data)
+
+
+def format_digest_text(digest_data):
+    """Текстовый формат дайджеста."""
+    lines = []
+    
+    # Заголовок
+    period_names = {'day': 'за день', 'week': 'за неделю', 'month': 'за месяц'}
+    period_str = period_names.get(digest_data['period'], digest_data['period'])
+    
+    lines.append('=' * 80)
+    lines.append(f'Дайджест новых публикаций {period_str}')
+    lines.append(f'{digest_data["date_from"]} — {digest_data["date_to"]}')
+    lines.append('=' * 80)
+    lines.append('')
+    
+    # Статистика
+    lines.append(f'Всего статей: {digest_data["total"]}')
+    lines.append('')
+    lines.append('По категориям:')
+    for cat, count in list(digest_data['statistics']['by_category'].items())[:10]:
+        lines.append(f'  {cat}: {count}')
+    lines.append('')
+    lines.append('=' * 80)
+    lines.append('')
+    
+    # Статьи, сгруппированные по категориям
+    for category, entries in sorted(digest_data['grouped'].items()):
+        lines.append(f'\n## {category} ({len(entries)} статей)\n')
+        
+        for i, entry in enumerate(entries, 1):
+            lines.append(f'[{i}] {entry["title"]}')
+            
+            # Авторы
+            authors = entry['authors'][:3]
+            authors_str = ', '.join(authors)
+            if len(entry['authors']) > 3:
+                authors_str += f' и ещё {len(entry["authors"]) - 3}'
+            lines.append(f'    Авторы: {authors_str}')
+            
+            # Дата
+            lines.append(f'    Дата: {entry["published"][:10]}')
+            lines.append(f'    ID: {entry["id"]}')
+            
+            # Краткая аннотация
+            abstract = entry['abstract'].replace('\n', ' ')
+            if len(abstract) > 200:
+                abstract = abstract[:197] + '...'
+            lines.append(f'    {abstract}')
+            lines.append('')
+    
+    return '\n'.join(lines)
+
+
+def format_digest_markdown(digest_data):
+    """Markdown формат дайджеста."""
+    lines = []
+    
+    # Заголовок
+    period_names = {'day': 'за день', 'week': 'за неделю', 'month': 'за месяц'}
+    period_str = period_names.get(digest_data['period'], digest_data['period'])
+    
+    lines.append(f'# Дайджест новых публикаций {period_str}')
+    lines.append(f'*{digest_data["date_from"]} — {digest_data["date_to"]}*')
+    lines.append('')
+    
+    # Статистика
+    lines.append(f'**Всего статей:** {digest_data["total"]}')
+    lines.append('')
+    lines.append('### Статистика по категориям')
+    lines.append('')
+    for cat, count in list(digest_data['statistics']['by_category'].items())[:10]:
+        lines.append(f'- **{cat}**: {count}')
+    lines.append('')
+    lines.append('---')
+    lines.append('')
+    
+    # Статьи, сгруппированные по категориям
+    for category, entries in sorted(digest_data['grouped'].items()):
+        lines.append(f'## {category} ({len(entries)} статей)')
+        lines.append('')
+        
+        for entry in entries:
+            lines.append(f'### {entry["title"]}')
+            lines.append('')
+            
+            # Авторы
+            authors = ', '.join(entry['authors'][:5])
+            if len(entry['authors']) > 5:
+                authors += f' и др. ({len(entry["authors"])} авторов)'
+            lines.append(f'**Авторы:** {authors}')
+            lines.append('')
+            
+            # Метаданные
+            lines.append(f'- **ID:** `{entry["id"]}`')
+            lines.append(f'- **Дата:** {entry["published"][:10]}')
+            lines.append(f'- **Категории:** {", ".join(entry["categories"])}')
+            lines.append(f'- **PDF:** {entry["pdf_url"]}')
+            lines.append(f'- **Abstract:** {entry["abs_url"]}')
+            lines.append('')
+            
+            # Аннотация
+            lines.append('**Аннотация:**')
+            lines.append('')
+            lines.append(entry['abstract'])
+            lines.append('')
+            lines.append('---')
+            lines.append('')
+    
+    return '\n'.join(lines)
 
 
 def format_bibtex(entry):
