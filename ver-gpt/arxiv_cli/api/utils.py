@@ -15,6 +15,8 @@ def normalize_arxiv_id(s: str) -> str:
     Accepts plain ids (e.g. 2402.05964v2) and URLs like:
     - https://arxiv.org/abs/2402.05964v2
     - https://arxiv.org/pdf/2402.05964v2.pdf
+
+    Note: the returned id may include a version suffix (vN).
     """
     s = s.strip()
     s = s.removeprefix("https://").removeprefix("http://")
@@ -27,3 +29,22 @@ def normalize_arxiv_id(s: str) -> str:
     if not m:
         raise ValueError(f"Invalid arXiv id: {s}")
     return m.group("id")
+
+
+def base_arxiv_id(arxiv_id: str) -> str:
+    """Strip version suffix from arXiv id (e.g. 2402.05964v2 -> 2402.05964)."""
+    if "v" in arxiv_id:
+        left, right = arxiv_id.rsplit("v", 1)
+        if right.isdigit():
+            return left
+    return arxiv_id
+
+
+def parse_version(arxiv_id: str) -> int | None:
+    """Extract integer version from arXiv id, if present."""
+    if "v" not in arxiv_id:
+        return None
+    left, right = arxiv_id.rsplit("v", 1)
+    if not right.isdigit() or not left:
+        return None
+    return int(right)
