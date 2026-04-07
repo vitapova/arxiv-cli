@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
+import time
 import typer
 from rich.console import Console
 from rich.table import Table
+from urllib.error import HTTPError
 
 from arxiv_cli.api.client import ArxivClient, ArxivQuery
 from arxiv_cli.api.rate_limit import RateLimiter
@@ -86,6 +88,8 @@ def add_subscribe_commands(app: typer.Typer) -> None:
             "--min-interval",
             help="Minimum seconds between API requests (rate limiting)",
         ),
+        retries_429: int = typer.Option(2, "--retries-429", help="Retries on HTTP 429 per subscription"),
+        backoff_s: float = typer.Option(15.0, "--backoff", help="Base backoff seconds for HTTP 429"),
     ) -> None:
         subs = SubscriptionsStore().load()
         if not subs:
@@ -107,12 +111,33 @@ def add_subscribe_commands(app: typer.Typer) -> None:
                 sortOrder="descending",
             )
 
-            try:
-                limiter.sleep_if_needed()
-                papers = client.search(q)
-            except Exception as e:
+            papers = None
+            last_err: Exception | None = None
+            attempts = 0
+            while True:
+                try:
+                    limiter.sleep_if_needed()
+                    papers = client.search(q)
+                    break
+                except HTTPError as e:
+                    last_err = e
+                    if e.code != 429 or attempts >= retries_429:
+                        break
+                    wait = backoff_s * (2**attempts)
+                    typer.echo(
+                        f"\n# Subscription {s.id}: query={search_q}\n"
+                        f"WARN\tHTTP 429, backing off {wait:.0f}s (attempt {attempts+1}/{retries_429})"
+                    )
+                    time.sleep(wait)
+                    attempts += 1
+                    continue
+                except Exception as e:
+                    last_err = e
+                    break
+
+            if papers is None:
                 typer.echo(f"\n# Subscription {s.id}: query={search_q}\n")
-                typer.echo(f"ERR\t{type(e).__name__}: {e}")
+                typer.echo(f"ERR\t{type(last_err).__name__}: {last_err}")
                 continue
 
             seen = state.get_seen(s.id)
