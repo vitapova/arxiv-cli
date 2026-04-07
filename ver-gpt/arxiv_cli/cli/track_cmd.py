@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 
 from arxiv_cli.api.metadata import fetch_latest_by_base_id, fetch_paper_by_id

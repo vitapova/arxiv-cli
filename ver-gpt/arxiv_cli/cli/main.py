@@ -7,6 +7,12 @@ import typer
 from rich.console import Console
 
 from arxiv_cli.api.client import ArxivClient, ArxivQuery
+from arxiv_cli.cli.digest_cmd import add_digest_command
+from arxiv_cli.cli.download import add_download_command
+from arxiv_cli.cli.export_cmd import add_export_command
+from arxiv_cli.cli.list_cmd import add_list_command
+from arxiv_cli.cli.subscribe_cmd import add_subscribe_commands
+from arxiv_cli.cli.track_cmd import add_track_commands
 from arxiv_cli.utils.formatting import (
     build_papers_table,
     format_papers_compact,
@@ -14,14 +20,6 @@ from arxiv_cli.utils.formatting import (
 )
 
 app = typer.Typer(add_completion=False, help="CLI for arXiv: search, digests, watch, PDF, export")
-
-# Subcommands
-from arxiv_cli.cli.download import add_download_command
-from arxiv_cli.cli.export_cmd import add_export_command
-from arxiv_cli.cli.track_cmd import add_track_commands
-from arxiv_cli.cli.list_cmd import add_list_command
-from arxiv_cli.cli.subscribe_cmd import add_subscribe_commands
-from arxiv_cli.cli.digest_cmd import add_digest_command
 
 add_download_command(app)
 add_export_command(app)
