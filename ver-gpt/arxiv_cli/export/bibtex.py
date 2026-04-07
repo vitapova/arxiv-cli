@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from arxiv_cli.storage.library import LibraryItem
+from arxiv_cli.storage.schema import ArticleRecord
 
 
-def _bibtex_key(item: LibraryItem) -> str:
+def _bibtex_key(item: ArticleRecord) -> str:
     # {id}_{first_author}_{year} style key (without punctuation issues)
     first_author = (item.authors[0] if item.authors else "unknown").split()[-1]
     year = (item.published or "")[0:4] or "????"
@@ -14,7 +14,7 @@ def _bibtex_key(item: LibraryItem) -> str:
     return "".join(ch for ch in base if ch.isalnum() or ch in "_-:")
 
 
-def bibtex_dump(items: Iterable[LibraryItem]) -> str:
+def bibtex_dump(items: Iterable[ArticleRecord]) -> str:
     entries: list[str] = []
     for it in items:
         key = _bibtex_key(it)

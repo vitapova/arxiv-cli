@@ -8,6 +8,7 @@ import typer
 from arxiv_cli.export.bibtex import bibtex_dump
 from arxiv_cli.export.csl import csl_dump
 from arxiv_cli.storage.library import Library, default_library_path
+from arxiv_cli.storage.schema import ArticleRecord
 
 
 def add_export_command(app: typer.Typer) -> None:
@@ -28,7 +29,7 @@ def add_export_command(app: typer.Typer) -> None:
         if format_ not in {"bibtex", "csl"}:
             raise typer.BadParameter("--format must be bibtex or csl")
 
-        items = Library(library_path).load()
+        items: list[ArticleRecord] = Library(library_path).load()
 
         if tag:
             tag_set = set(tag)

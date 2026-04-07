@@ -23,12 +23,16 @@
   - фильтры: `--tag`, `--category`
   - экспорт всей библиотеки по умолчанию
 
+- `arxiv track add` — добавление статьи в локальную библиотеку (fetch метаданных из arXiv)
+  - задаёт `added_at`, `status`, `tags`
+
 ## Команды
 
 - `arxiv search` — поиск
 - `arxiv download` — скачивание PDF
 - `arxiv export` — экспорт библиографии
-- (в планах) `arxiv digest`, `arxiv watch`
+- `arxiv track` — управление локальной библиотекой
+- (в планах) `arxiv list`, `arxiv digest`, `arxiv subscribe`
 
 ## Источник данных
 
@@ -45,6 +49,16 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -e .
 ```
+
+## Локальное хранилище
+
+По умолчанию данные хранятся в user data dir ОС.
+На macOS это обычно:
+
+- `~/Library/Application Support/arxiv-cli/`
+  - `library.json` — библиотека статей
+  - `subscriptions.json` — подписки (пока заглушка, будет)
+  - `state/` — состояние (last seen и т.п.)
 
 ## Примеры
 

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from arxiv_cli.storage.library import LibraryItem
+from arxiv_cli.storage.schema import ArticleRecord
 
 
-def csl_dump(items: Iterable[LibraryItem]) -> str:
+def csl_dump(items: Iterable[ArticleRecord]) -> str:
     out: list[dict[str, Any]] = []
     for it in items:
         year = None
