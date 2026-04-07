@@ -134,4 +134,65 @@ def add_track_commands(app: typer.Typer) -> None:
             upd = (e.updated or "")
             typer.echo(f"{base_id}\tv{e.seen_version}\tseen_at={e.seen_at}\tupdated={upd}")
 
+    @track_app.command("status")
+    def status_cmd(
+        arxiv_id: str = typer.Argument(..., help="arXiv id or URL"),
+        set_: str = typer.Option(..., "--set", help="read|unread|starred"),
+    ) -> None:
+        """Set local status for a saved paper."""
+        if set_ not in {"read", "unread", "starred"}:
+            raise typer.BadParameter("--set must be read|unread|starred")
+
+        norm = normalize_arxiv_id(arxiv_id)
+        lib = Library()
+        items = lib.load()
+        found = False
+        for it in items:
+            if it.arxiv_id == norm:
+                it.status = set_  # type: ignore[assignment]
+                found = True
+                break
+
+        if not found:
+            typer.echo(f"Not found\t{norm}")
+            raise typer.Exit(code=1)
+
+        lib.save(items)
+        typer.echo(f"OK\t{norm}\tstatus={set_}")
+
+    @track_app.command("tag")
+    def tag_cmd(
+        arxiv_id: str = typer.Argument(..., help="arXiv id or URL"),
+        add: list[str] = typer.Option([], "--add", help="Tag(s) to add (repeatable)"),
+        remove: list[str] = typer.Option([], "--remove", help="Tag(s) to remove (repeatable)"),
+    ) -> None:
+        """Add/remove local tags for a saved paper."""
+        if not add and not remove:
+            raise typer.BadParameter("Provide --add and/or --remove")
+
+        norm = normalize_arxiv_id(arxiv_id)
+        lib = Library()
+        items = lib.load()
+        for it in items:
+            if it.arxiv_id != norm:
+                continue
+
+            tagset = set(it.tags)
+            for t in add:
+                t = t.strip()
+                if t:
+                    tagset.add(t)
+            for t in remove:
+                t = t.strip()
+                if t:
+                    tagset.discard(t)
+
+            it.tags = sorted(tagset)
+            lib.save(items)
+            typer.echo(f"OK\t{norm}\ttags={','.join(it.tags)}")
+            return
+
+        typer.echo(f"Not found\t{norm}")
+        raise typer.Exit(code=1)
+
     app.add_typer(track_app, name="track")
