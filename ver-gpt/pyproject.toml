@@ -11,9 +11,18 @@ dependencies = [
   "platformdirs>=4.0.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+]
+
 [project.scripts]
 arxiv = "arxiv_cli.cli.main:main"
 
 [build-system]
 requires = ["hatchling>=1.21"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/2402.05964v2</id>
+    <updated>2024-04-07T13:03:58Z</updated>
+    <published>2024-02-05T12:16:28Z</published>
+    <title>A Survey on Transformer Compression</title>
+    <summary> Transformer plays a vital role. </summary>
+    <author><name>Yehui Tang</name></author>
+    <author><name>Yunhe Wang</name></author>
+    <category term="cs.LG" />
+    <category term="cs.CL" />
+    <link rel="alternate" href="https://arxiv.org/abs/2402.05964v2" />
+    <link title="pdf" href="https://arxiv.org/pdf/2402.05964v2" />
+  </entry>
+</feed>
