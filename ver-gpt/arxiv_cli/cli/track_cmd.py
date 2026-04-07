@@ -45,4 +45,20 @@ def add_track_commands(app: typer.Typer) -> None:
         Library().upsert(rec)
         typer.echo(f"Saved\t{rec.arxiv_id}")
 
+    @track_app.command("remove")
+    def remove(
+        arxiv_id: str = typer.Argument(..., help="arXiv id or URL"),
+    ) -> None:
+        """Remove a paper from the local library."""
+        norm = normalize_arxiv_id(arxiv_id)
+        lib = Library()
+        items = lib.load()
+        before = len(items)
+        items = [it for it in items if it.arxiv_id != norm]
+        if len(items) == before:
+            typer.echo(f"Not found\t{norm}")
+            raise typer.Exit(code=1)
+        lib.save(items)
+        typer.echo(f"Removed\t{norm}")
+
     app.add_typer(track_app, name="track")
