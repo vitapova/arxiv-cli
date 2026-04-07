@@ -21,12 +21,14 @@ from arxiv_cli.cli.export_cmd import add_export_command
 from arxiv_cli.cli.track_cmd import add_track_commands
 from arxiv_cli.cli.list_cmd import add_list_command
 from arxiv_cli.cli.subscribe_cmd import add_subscribe_commands
+from arxiv_cli.cli.digest_cmd import add_digest_command
 
 add_download_command(app)
 add_export_command(app)
 add_track_commands(app)
 add_list_command(app)
 add_subscribe_commands(app)
+add_digest_command(app)
 
 
 @app.command("search")

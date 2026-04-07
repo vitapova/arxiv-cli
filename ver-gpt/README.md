@@ -33,7 +33,8 @@
 - `arxiv export` — экспорт библиографии
 - `arxiv track` — управление локальной библиотекой
 - `arxiv list` — просмотр и поиск по локальной библиотеке
-- (в планах) `arxiv digest`, `arxiv subscribe`
+- `arxiv subscribe` — подписки на сохранённые запросы
+- `arxiv digest` — дайджест новых публикаций
 
 ## Источник данных
 
@@ -141,6 +142,16 @@ arxiv list --format table
 arxiv list --status unread --tag transformers --format compact
 arxiv list --from 2026-04-01 --to 2026-04-30 --sort added --order desc
 arxiv list --q memorization
+```
+
+### `digest`
+
+```bash
+# Week digest for a category + keywords
+arxiv digest --period week --category cs.CL --keywords transformer --max-results 100
+
+# Export to Markdown file
+arxiv digest --period day --category cs.AI --keywords agents --export digest.md
 ```
 
 ### `export`
