@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔍 Поиск</h1>
+</div>
+
+<div class="search-box">
+    <form action="/search" method="get">
+        <input type="text" name="q" value="{{ query }}" placeholder="Поиск по названию, авторам, аннотации..." class="search-input" autofocus>
+        <button type="submit" class="btn btn-primary">Найти</button>
+    </form>
+</div>
+
+{% if query %}
+    {% if results %}
+    <p class="search-results-count">Найдено: <strong>{{ results|length }}</strong> статей</p>
+    
+    <table class="papers-table">
+        <thead>
+            <tr>
+                <th width="3%"></th>
+                <th width="12%">ID</th>
+                <th width="10%">Дата</th>
+                <th width="8%">Категория</th>
+                <th>Название</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in results %}
+            <tr class="paper-row" onclick="window.location='/paper/{{ entry.id }}'">
+                <td class="status-cell">
+                    {% if entry.starred %}
+                    <span class="status-icon starred">★</span>
+                    {% elif entry.status == 'read' %}
+                    <span class="status-icon read">✓</span>
+                    {% else %}
+                    <span class="status-icon unread">○</span>
+                    {% endif %}
+                </td>
+                <td class="id-cell">{{ entry.id }}</td>
+                <td class="date-cell">{{ entry.published[:10] }}</td>
+                <td class="category-cell">
+                    <span class="badge badge-category">{{ entry.primary_category }}</span>
+                </td>
+                <td class="title-cell">{{ entry.title }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>🔍 Ничего не найдено по запросу "{{ query }}"</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

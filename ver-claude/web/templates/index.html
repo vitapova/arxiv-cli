@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📚 Библиотека</h1>
+    <div class="stats-bar">
+        <span class="stat">Всего: <strong>{{ stats.total }}</strong></span>
+        <span class="stat">✓ Прочитано: <strong>{{ stats.statuses.read }}</strong></span>
+        <span class="stat">○ Непрочитано: <strong>{{ stats.statuses.unread }}</strong></span>
+        <span class="stat">★ Избранное: <strong>{{ stats.starred }}</strong></span>
+    </div>
+</div>
+
+<div class="search-box">
+    <form action="/search" method="get">
+        <input type="text" name="q" placeholder="🔍 Поиск по названию, авторам, аннотации..." class="search-input">
+        <button type="submit" class="btn btn-primary">Найти</button>
+    </form>
+</div>
+
+{% if not entries %}
+<div class="empty-state">
+    <p>📭 Библиотека пуста</p>
+    <p class="hint">Добавьте статьи через CLI: <code>python3 -m arxiv_cli.cli add &lt;arxiv_id&gt;</code></p>
+</div>
+{% else %}
+<table class="papers-table">
+    <thead>
+        <tr>
+            <th width="3%"></th>
+            <th width="12%">ID</th>
+            <th width="10%">Дата</th>
+            <th width="8%">Категория</th>
+            <th width="20%">Теги</th>
+            <th>Название</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        <tr class="paper-row" onclick="window.location='/paper/{{ entry.id }}'">
+            <td class="status-cell">
+                {% if entry.starred %}
+                <span class="status-icon starred" title="Избранное">★</span>
+                {% elif entry.status == 'read' %}
+                <span class="status-icon read" title="Прочитано">✓</span>
+                {% else %}
+                <span class="status-icon unread" title="Непрочитано">○</span>
+                {% endif %}
+            </td>
+            <td class="id-cell">{{ entry.id }}</td>
+            <td class="date-cell">{{ entry.added_at[:10] if entry.added_at else '-' }}</td>
+            <td class="category-cell">
+                <span class="badge badge-category">{{ entry.primary_category }}</span>
+            </td>
+            <td class="tags-cell">
+                {% for tag in entry.tags[:3] %}
+                <span class="badge badge-tag">#{{ tag }}</span>
+                {% endfor %}
+                {% if entry.tags|length > 3 %}
+                <span class="badge-more">+{{ entry.tags|length - 3 }}</span>
+                {% endif %}
+            </td>
+            <td class="title-cell">
+                {{ entry.title[:80] }}{% if entry.title|length > 80 %}...{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

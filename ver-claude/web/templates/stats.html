@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Статистика</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>📚 Всего статей</h3>
+        <div class="stat-value">{{ stats.total }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>✓ Прочитано</h3>
+        <div class="stat-value">{{ stats.statuses.read }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>○ Непрочитано</h3>
+        <div class="stat-value">{{ stats.statuses.unread }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>★ Избранное</h3>
+        <div class="stat-value">{{ stats.starred }}</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📂 Топ категории</h2>
+    <table class="stats-table">
+        <thead>
+            <tr>
+                <th>Категория</th>
+                <th>Количество</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat, count in top_categories %}
+            <tr>
+                <td><span class="badge badge-category">{{ cat }}</span></td>
+                <td><strong>{{ count }}</strong></td>
+                <td>{{ "%.1f"|format(count / stats.total * 100) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h2>🏷️ Теги</h2>
+    <div class="tag-cloud">
+        {% for tag in stats.tags %}
+        <span class="tag-cloud-item">#{{ tag }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

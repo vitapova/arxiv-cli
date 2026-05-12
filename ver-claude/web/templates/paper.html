@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="paper-detail">
+    <div class="paper-header">
+        <h1>{{ entry.title }}</h1>
+        <div class="paper-meta">
+            <span class="badge badge-id">{{ entry.id }}</span>
+            <span class="badge badge-category">{{ entry.primary_category }}</span>
+            <span class="badge badge-date">📅 {{ entry.published[:10] }}</span>
+        </div>
+    </div>
+    
+    <div class="paper-actions">
+        <form method="post" action="/paper/{{ entry.id }}/status" style="display: inline;">
+            {% if entry.status == 'read' %}
+            <input type="hidden" name="status" value="unread">
+            <button type="submit" class="btn btn-success">✓ Прочитано</button>
+            {% else %}
+            <input type="hidden" name="status" value="read">
+            <button type="submit" class="btn btn-secondary">○ Отметить прочитанным</button>
+            {% endif %}
+        </form>
+        
+        <form method="post" action="/paper/{{ entry.id }}/star" style="display: inline;">
+            {% if entry.starred %}
+            <button type="submit" class="btn btn-warning">★ Избранное</button>
+            {% else %}
+            <button type="submit" class="btn btn-secondary">☆ В избранное</button>
+            {% endif %}
+        </form>
+        
+        <a href="{{ entry.pdf_url }}" target="_blank" class="btn btn-primary">📥 Скачать PDF</a>
+        <a href="{{ entry.abs_url }}" target="_blank" class="btn btn-secondary">🔗 Abstract</a>
+    </div>
+    
+    <div class="paper-section">
+        <h2>👥 Авторы</h2>
+        <p>{{ entry.authors|join(', ') }}</p>
+    </div>
+    
+    <div class="paper-section">
+        <h2>🏷️ Категории</h2>
+        <div class="badges">
+            {% for cat in entry.categories %}
+            <span class="badge badge-category">{{ cat }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if entry.tags %}
+    <div class="paper-section">
+        <h2>🏷️ Теги</h2>
+        <div class="badges">
+            {% for tag in entry.tags %}
+            <span class="badge badge-tag">#{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="paper-section">
+        <h2>📄 Аннотация</h2>
+        <p class="abstract">{{ entry.abstract }}</p>
+    </div>
+    
+    <div class="paper-section">
+        <h2>📝 Заметки</h2>
+        
+        {% if notes %}
+        <div class="notes-list">
+            {% for note in notes %}
+            <div class="note-item">
+                <div class="note-date">{{ note.created_at[:19].replace('T', ' ') }}</div>
+                <div class="note-text">{{ note.text }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="/paper/{{ entry.id }}/note" class="note-form">
+            <textarea name="note_text" placeholder="Добавить заметку..." rows="3"></textarea>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+</div>
+
+<div class="back-link">
+    <a href="/">← Вернуться в библиотеку</a>
+</div>
+{% endblock %}
