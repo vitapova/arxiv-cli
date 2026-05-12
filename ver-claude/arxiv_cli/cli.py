@@ -162,13 +162,13 @@ def digest(period, category, query, max, format, export):
 @click.option('--search', '-s', help='Поиск по названию и аннотации')
 @click.option('--sort', type=click.Choice(['added_at', 'published', 'title', 'read_at']), default='added_at', help='Сортировка')
 @click.option('--order', type=click.Choice(['asc', 'desc']), default='desc', help='Порядок сортировки')
-@click.option('--table', is_flag=True, help='Табличный формат')
+@click.option('--table', is_flag=True, help='Табличный формат (простой)')
 @click.option('--compact', is_flag=True, help='Компактный вывод')
-@click.option('--rich', is_flag=True, help='Красивый вывод с цветами')
+@click.option('--plain', is_flag=True, help='Без цветов (обычный текст)')
 @click.option('--mark-read', help='Отметить статью как прочитанную (arXiv ID)')
 @click.option('--mark-unread', help='Отметить статью как непрочитанную (arXiv ID)')
 @click.option('--star', help='Переключить избранное (arXiv ID)')
-def list_cmd(status, category, tag, search, sort, order, table, compact, rich, mark_read, mark_unread, star):
+def list_cmd(status, category, tag, search, sort, order, table, compact, plain, mark_read, mark_unread, star):
     """Вывод локальной библиотеки статей."""
     from arxiv_cli.commands.list import list_library, mark_as_read, mark_as_unread, toggle_star
     from arxiv_cli.utils.formatter import format_library_entry, format_library_table
@@ -203,23 +203,19 @@ def list_cmd(status, category, tag, search, sort, order, table, compact, rich, m
         )
         
         if not entries:
-            if rich:
-                from arxiv_cli.utils.rich_display import warning_message
-                warning_message('Библиотека пуста или не найдено статей по фильтру.')
-            else:
+            if plain:
                 click.echo('Библиотека пуста или не найдено статей по фильтру.')
                 click.echo('\nДобавьте статьи командой: download <arxiv_id>')
+            else:
+                from arxiv_cli.utils.rich_display import warning_message
+                warning_message('Библиотека пуста или не найдено статей по фильтру.')
             return
         
         # Статистика
         stats = get_stats()
         
-        # Rich вывод
-        if rich:
-            from arxiv_cli.utils.rich_display import display_library
-            display_library(entries, stats)
-        # Обычный вывод
-        else:
+        # Обычный текст (только если --plain)
+        if plain:
             click.echo(f"Библиотека: {len(entries)} из {stats['total']} статей")
             click.echo(f"Прочитано: {stats['statuses']['read']}, Непрочитано: {stats['statuses']['unread']}, Избранное: {stats['starred']}")
             click.echo()
@@ -231,6 +227,10 @@ def list_cmd(status, category, tag, search, sort, order, table, compact, rich, m
                     click.echo(f"[{i}]")
                     click.echo(format_library_entry(entry, compact=compact))
                     click.echo('=' * 80)
+        # Rich вывод (по умолчанию)
+        else:
+            from arxiv_cli.utils.rich_display import display_library
+            display_library(entries, stats)
     
     except Exception as e:
         click.echo(f'✗ Ошибка: {e}', err=True)
@@ -291,10 +291,10 @@ def remove(arxiv_id):
 @cli.command()
 @click.argument('arxiv_id')
 @click.option('--library', is_flag=True, help='Показать информацию из библиотеки')
-@click.option('--rich', is_flag=True, help='Красивый вывод с цветами')
+@click.option('--plain', is_flag=True, help='Без цветов (обычный текст)')
 @click.option('--add-tag', multiple=True, help='Добавить тег')
 @click.option('--remove-tag', multiple=True, help='Удалить тег')
-def info(arxiv_id, library, rich, add_tag, remove_tag):
+def info(arxiv_id, library, plain, add_tag, remove_tag):
     """Показать детальную информацию о статье."""
     from arxiv_cli.commands.manage import get_info, manage_tags
     from arxiv_cli.api.client import ArxivAPIError
@@ -313,13 +313,13 @@ def info(arxiv_id, library, rich, add_tag, remove_tag):
         # Получаем информацию
         entry = get_info(arxiv_id, from_library=library)
         
-        # Rich вывод
-        if rich:
+        # Rich вывод (по умолчанию)
+        if not plain:
             from arxiv_cli.utils.rich_display import display_paper_info
             display_paper_info(entry, from_library=library)
             return
         
-        # Обычный вывод
+        # Обычный текст (только если --plain)
         click.echo('=' * 80)
         click.echo(f'ID: {entry["id"]}')
         click.echo(f'Название: {entry["title"]}')
@@ -764,8 +764,8 @@ def download(arxiv_id, output, output_dir, auto_name, batch, tag, no_library):
 @click.option('--category', '-c', help='Фильтр по категории')
 @click.option('--tag', '-t', multiple=True, help='Фильтр по тегу')
 @click.option('--stats', is_flag=True, help='Показать статистику библиотеки')
-@click.option('--rich', is_flag=True, help='Красивый вывод статистики')
-def export(arxiv_id, format, output, export_all, category, tag, stats, rich):
+@click.option('--plain', is_flag=True, help='Без цветов (обычный текст)')
+def export(arxiv_id, format, output, export_all, category, tag, stats, plain):
     """Экспорт библиографических данных."""
     from arxiv_cli.commands.export import export_single, export_library
     from arxiv_cli.utils.library import get_stats
@@ -776,10 +776,7 @@ def export(arxiv_id, format, output, export_all, category, tag, stats, rich):
         if stats:
             stats_data = get_stats()
             
-            if rich:
-                from arxiv_cli.utils.rich_display import display_stats
-                display_stats(stats_data)
-            else:
+            if plain:
                 click.echo(f"Статей в библиотеке: {stats_data['total']}")
                 click.echo(f"Обновлено: {stats_data['updated'] or 'никогда'}")
                 click.echo()
@@ -791,6 +788,9 @@ def export(arxiv_id, format, output, export_all, category, tag, stats, rich):
                 
                 if stats_data['tags']:
                     click.echo(f"\nТеги: {', '.join(stats_data['tags'])}")
+            else:
+                from arxiv_cli.utils.rich_display import display_stats
+                display_stats(stats_data)
             
             return
         
