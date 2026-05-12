@@ -836,5 +836,169 @@ def export(arxiv_id, format, output, export_all, category, tag, stats, plain):
         raise click.Abort()
 
 
+@cli.group()
+def authors():
+    """Отслеживание авторов."""
+    pass
+
+
+@authors.command(name='follow')
+@click.argument('name')
+@click.option('--tag', '-t', multiple=True, help='Теги для категоризации')
+@click.option('--max', '-m', default=10, help='Количество статей для проверки')
+def authors_follow_cmd(name, tag, max):
+    """Добавить автора в отслеживание."""
+    from arxiv_cli.commands.authors import authors_follow
+    from arxiv_cli.utils.rich_display import success_message, error_message
+    
+    try:
+        tags = list(tag) if tag else None
+        result = authors_follow(name, tags=tags, max_results=max)
+        
+        if result is None:
+            error_message(f'Автор "{name}" уже отслеживается')
+            return
+        
+        success_message(f'Автор "{name}" добавлен в отслеживание')
+        click.echo()
+        if tags:
+            click.echo(f'Теги: {", ".join(tags)}')
+        click.echo(f'Максимум статей: {max}')
+        click.echo()
+        click.echo('Используйте "authors check" для проверки новых публикаций')
+    
+    except Exception as e:
+        error_message(f'Ошибка: {e}')
+        raise click.Abort()
+
+
+@authors.command(name='list')
+def authors_list_cmd():
+    """Список отслеживаемых авторов."""
+    from arxiv_cli.commands.authors import authors_list
+    from arxiv_cli.utils.rich_display import console, warning_message
+    from rich.table import Table
+    from rich import box
+    
+    try:
+        authors_data = authors_list()
+        
+        if not authors_data:
+            warning_message('Нет отслеживаемых авторов')
+            click.echo('\nДобавьте: authors follow "Имя Фамилия"')
+            return
+        
+        console.print(f"\n[bold cyan]👥 Отслеживаемых авторов:[/bold cyan] {len(authors_data)}\n")
+        
+        table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
+        table.add_column("Автор", style="yellow")
+        table.add_column("Теги", style="cyan")
+        table.add_column("Добавлен", style="green", no_wrap=True)
+        table.add_column("Последняя проверка", style="dim", no_wrap=True)
+        
+        for author in authors_data:
+            tags_str = ', '.join(author.get('tags', [])) if author.get('tags') else '-'
+            added = author['added_at'][:10]
+            checked = author.get('last_checked')
+            if checked:
+                checked = checked[:10]
+            else:
+                checked = '-'
+            
+            table.add_row(
+                author['name'],
+                tags_str,
+                added,
+                checked
+            )
+        
+        console.print(table)
+        console.print()
+    
+    except Exception as e:
+        error_message(f'Ошибка: {e}')
+        raise click.Abort()
+
+
+@authors.command(name='unfollow')
+@click.argument('name')
+def authors_unfollow_cmd(name):
+    """Убрать автора из отслеживания."""
+    from arxiv_cli.commands.authors import authors_unfollow
+    from arxiv_cli.utils.rich_display import success_message, error_message
+    
+    try:
+        if click.confirm(f'Перестать отслеживать автора "{name}"?'):
+            if authors_unfollow(name):
+                success_message(f'Автор "{name}" убран из отслеживания')
+            else:
+                error_message(f'Автор "{name}" не найден')
+        else:
+            click.echo('Отменено')
+    
+    except Exception as e:
+        error_message(f'Ошибка: {e}')
+        raise click.Abort()
+
+
+@authors.command(name='check')
+@click.argument('name', required=False)
+def authors_check_cmd(name):
+    """Проверить новые публикации авторов."""
+    from arxiv_cli.commands.authors import authors_check
+    from arxiv_cli.utils.rich_display import console, success_message, info_message
+    from arxiv_cli.api.client import ArxivAPIError
+    
+    try:
+        if name:
+            info_message(f'Проверка публикаций автора "{name}"...')
+        else:
+            info_message('Проверка публикаций всех отслеживаемых авторов...')
+        
+        console.print()
+        
+        results = authors_check(name=name)
+        
+        if not results:
+            from arxiv_cli.utils.rich_display import warning_message
+            warning_message('Нет авторов для проверки')
+            return
+        
+        total_new = sum(r['new'] for r in results)
+        
+        if total_new == 0:
+            success_message('Новых публикаций не найдено')
+            return
+        
+        console.print(f"[bold green]📚 Найдено новых статей:[/bold green] {total_new}\n")
+        
+        for result in results:
+            if result['new'] == 0:
+                continue
+            
+            console.print(f"[bold cyan]👤 {result['author']}[/bold cyan]")
+            console.print(f"   [dim]Новых: {result['new']} из {result['total']}[/dim]\n")
+            
+            for i, paper in enumerate(result['new_papers'][:5], 1):
+                title = paper['title']
+                if len(title) > 70:
+                    title = title[:67] + '...'
+                
+                console.print(f"   [{i}] [white]{title}[/white]")
+                console.print(f"       [dim]{paper['id']} | {paper['primary_category']} | {paper['published'][:10]}[/dim]")
+            
+            if len(result['new_papers']) > 5:
+                console.print(f"   [dim]... и ещё {len(result['new_papers']) - 5}[/dim]")
+            
+            console.print()
+    
+    except ArxivAPIError as e:
+        error_message(f'Ошибка API: {e}')
+        raise click.Abort()
+    except Exception as e:
+        error_message(f'Ошибка: {e}')
+        raise click.Abort()
+
+
 if __name__ == '__main__':
     cli()
