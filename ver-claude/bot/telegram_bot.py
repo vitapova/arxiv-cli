@@ -40,57 +40,89 @@ def handle_command(command, args='', user_id=None):
     # /start
     if command == 'start':
         return {
-            'text': """🎓 **arXiv Assistant**
+            'text': """🎓 **arXiv Research Assistant**
 
 Ваш персональный помощник для работы с научными статьями!
 
-**Команды:**
-/search <запрос> — поиск статей
-/library — ваша библиотека
-/add <arxiv_id> — добавить статью
-/info <arxiv_id> — детали статьи
-/stats — статистика
-/digest — дайджест за неделю
-/authors — отслеживаемые авторы
-/help — помощь
+**Основные команды:**
+📚 /library — моя библиотека
+🔍 /search <запрос> — поиск статей
+➕ /add <id> — добавить в библиотеку
+ℹ️ /info <id> — информация о статье
 
-**Web UI:** http://localhost:5002
+**Дополнительно:**
+📊 /stats — статистика
+📰 /digest — дайджест за неделю
+👥 /authors — отслеживаемые авторы
+❓ /help — полная справка
 """,
             'buttons': [
-                [{'text': '📚 Библиотека', 'callback': '/library'}],
-                [{'text': '🔍 Поиск новинок', 'callback': '/search last week'}],
-                [{'text': '📊 Статистика', 'callback': '/stats'}]
+                [
+                    {'text': '📚 Библиотека', 'callback': '/library'},
+                    {'text': '📊 Статистика', 'callback': '/stats'}
+                ],
+                [
+                    {'text': '🔍 Поиск: Quantum', 'callback': '/search quantum'},
+                    {'text': '🔍 Поиск: AGI', 'callback': '/search AGI'}
+                ],
+                [{'text': '📰 Дайджест недели', 'callback': '/digest week'}],
+                [{'text': '❓ Помощь', 'callback': '/help'}]
             ]
         }
     
     # /library
     elif command == 'library':
         stats = get_stats()
-        entries = get_entries(sort_by='added_at', sort_order='desc')[:10]
+        entries = get_entries(sort_by='added_at', sort_order='desc')[:5]
         
-        text = f"""📚 **Библиотека**
+        if stats['total'] == 0:
+            return {
+                'text': """📚 **Библиотека пуста**
 
-Всего: {stats['total']}
-✓ Прочитано: {stats['statuses']['read']}
-○ Непрочитано: {stats['statuses']['unread']}
-★ Избранное: {stats['starred']}
+Добавьте статьи:
+• /search <тема> — поиск
+• /add <arxiv_id> — по ID
 
-**Последние статьи:**
+Или попробуйте:""",
+                'buttons': [
+                    [
+                        {'text': '🔍 Quantum', 'callback': '/search quantum'},
+                        {'text': '🔍 AGI', 'callback': '/search AGI'}
+                    ],
+                    [{'text': '📰 Дайджест', 'callback': '/digest week'}]
+                ]
+            }
+        
+        text = f"""📚 **Моя библиотека**
+
+📊 Всего: {stats['total']} | ✓ {stats['statuses']['read']} | ○ {stats['statuses']['unread']} | ★ {stats['starred']}
+
+**Последние добавленные:**
 """
+        
+        buttons = []
         
         for i, entry in enumerate(entries, 1):
             status_icon = '★' if entry.get('starred') else ('✓' if entry.get('status') == 'read' else '○')
-            text += f"\n{status_icon} `{entry['id']}` {entry['title'][:50]}..."
+            title = entry['title'][:45] + '...' if len(entry['title']) > 45 else entry['title']
+            text += f"\n{status_icon} [{i}] {title}\n   `{entry['id']}` • {entry['primary_category']}\n"
+            
+            # Кнопка для каждой статьи
+            if i <= 3:
+                buttons.append([{'text': f"ℹ️ Детали [{i}]", 'callback': f'/info {entry["id"]}'}])
         
-        if stats['total'] > 10:
-            text += f"\n\n_...и ещё {stats['total'] - 10}_"
+        if stats['total'] > 5:
+            text += f"\n_...и ещё {stats['total'] - 5}. Используйте поиск или Web UI_"
+        
+        # Общие кнопки
+        buttons.append([
+            {'text': '📊 Статистика', 'callback': '/stats'},
+            {'text': '🔍 Поиск', 'callback': '/search'}
+        ])
         
         return {
             'text': text,
-            'buttons': [
-                [{'text': '🔍 Поиск', 'callback': '/search'}],
-                [{'text': '📊 Статистика', 'callback': '/stats'}]
-            ]
+            'buttons': buttons
         }
     
     # /stats
@@ -119,113 +151,198 @@ def handle_command(command, args='', user_id=None):
     
     # /search <query>
     elif command == 'search':
-        if not args or args == 'last week':
-            query = 'quantum OR transformer OR LLM'
-            max_results = 5
-        else:
-            query = args
-            max_results = 5
+        if not args or args.strip() == '':
+            return {
+                'text': '🔍 **Поиск статей**\n\nИспользование: /search <запрос>\n\nПримеры:',
+                'buttons': [
+                    [
+                        {'text': 'Quantum Computing', 'callback': '/search quantum computing'},
+                        {'text': 'AGI', 'callback': '/search AGI'}
+                    ],
+                    [
+                        {'text': 'Transformers', 'callback': '/search transformer'},
+                        {'text': 'LLM', 'callback': '/search large language model'}
+                    ],
+                    [{'text': '🔙 Назад', 'callback': '/start'}]
+                ]
+            }
         
         try:
-            results = search_articles(query, max_results=max_results, verbose=False)
+            results = search_articles(args, max_results=5, verbose=False)
             
-            text = f"🔍 **Поиск:** {query}\n\nНайдено: {results['total_results']}\n"
+            text = f"🔍 **Поиск:** _{args}_\n\n📊 Найдено: {results['total_results']}\n\n"
+            
+            buttons = []
             
             for i, entry in enumerate(results['entries'], 1):
-                text += f"\n**{i}. {entry['title'][:60]}...**\n"
+                title = entry['title'][:55] + '...' if len(entry['title']) > 55 else entry['title']
                 authors = ', '.join(entry['authors'][:2])
                 if len(entry['authors']) > 2:
                     authors += ' et al.'
-                text += f"_{authors}_ • `{entry['id']}` • {entry['published'][:10]}\n"
+                
+                text += f"**[{i}] {title}**\n"
+                text += f"👤 {authors}\n"
+                text += f"🏷️ {entry['primary_category']} • `{entry['id']}` • {entry['published'][:10]}\n\n"
+                
+                # Кнопки для каждой статьи
+                buttons.append([
+                    {'text': f"ℹ️ Детали [{i}]", 'callback': f"/info {entry['id']}"},
+                    {'text': f"➕ Добавить [{i}]", 'callback': f"/add {entry['id']}"}
+                ])
+            
+            # Общие кнопки
+            buttons.append([
+                {'text': '🔍 Новый поиск', 'callback': '/search'},
+                {'text': '📚 Библиотека', 'callback': '/library'}
+            ])
             
             return {
                 'text': text,
-                'buttons': [[{'text': f"ℹ️ {i}", 'callback': f"/info {results['entries'][i-1]['id']}"} for i in range(1, min(4, len(results['entries'])+1))]]
+                'buttons': buttons
             }
         
         except Exception as e:
-            return {'text': f'❌ Ошибка поиска: {e}'}
+            return {
+                'text': f'❌ Ошибка поиска: {e}\n\nВозможно rate limit. Попробуйте через минуту.',
+                'buttons': [[{'text': '🔙 Назад', 'callback': '/start'}]]
+            }
     
     # /add <arxiv_id>
     elif command == 'add':
         if not args:
-            return {'text': '❌ Укажите arXiv ID\n\nПример: /add 1706.03762'}
+            return {
+                'text': '❌ Укажите arXiv ID\n\nПример: /add 1706.03762',
+                'buttons': [[{'text': '🔙 Назад', 'callback': '/search'}]]
+            }
         
         try:
+            # Проверяем, может уже в библиотеке
+            existing = get_entry(args)
+            if existing:
+                return {
+                    'text': f'ℹ️ Статья `{args}` уже в библиотеке!\n\n{existing["title"][:60]}...',
+                    'buttons': [
+                        [{'text': 'ℹ️ Посмотреть', 'callback': f'/info {args}'}],
+                        [{'text': '📚 Библиотека', 'callback': '/library'}]
+                    ]
+                }
+            
             entry = add_to_library(args, status='unread')
+            
+            authors = ', '.join(entry['authors'][:3])
+            if len(entry['authors']) > 3:
+                authors += ' et al.'
             
             text = f"""✅ **Добавлено в библиотеку**
 
-📄 {entry['title']}
+📄 {entry['title'][:80]}...
 
-👤 {', '.join(entry['authors'][:3])}
-{'...' if len(entry['authors']) > 3 else ''}
-
+👤 {authors}
 🏷️ {entry['primary_category']}
 📅 {entry['published'][:10]}
+🆔 `{entry['id']}`
 
-🔗 [PDF]({entry['pdf_url']})
+Что дальше?
 """
             
             return {
                 'text': text,
                 'buttons': [
                     [
-                        {'text': '✓ Прочитано', 'callback': f'/mark-read {args}'},
-                        {'text': '★ Избранное', 'callback': f'/star {args}'}
+                        {'text': '✓ Отметить прочитанным', 'callback': f'/mark-read {args}'},
+                        {'text': '⭐ В избранное', 'callback': f'/star {args}'}
+                    ],
+                    [
+                        {'text': 'ℹ️ Детали', 'callback': f'/info {args}'},
+                        {'text': '📥 BibTeX', 'callback': f'/bibtex {args}'}
                     ],
                     [{'text': '📚 Библиотека', 'callback': '/library'}]
                 ]
             }
         
         except Exception as e:
-            return {'text': f'❌ Ошибка: {e}'}
+            return {
+                'text': f'❌ Ошибка: {e}',
+                'buttons': [[{'text': '🔙 Назад', 'callback': '/search'}]]
+            }
     
     # /info <arxiv_id>
     elif command == 'info':
         if not args:
-            return {'text': '❌ Укажите arXiv ID\n\nПример: /info 1706.03762'}
+            return {
+                'text': '❌ Укажите arXiv ID\n\nПример: /info 1706.03762',
+                'buttons': [[{'text': '🔙 Назад', 'callback': '/library'}]]
+            }
         
         try:
             entry = get_entry(args)
+            in_library = entry is not None
+            
             if not entry:
                 # Получаем из API
                 entry = get_info(args, from_library=False)
             
+            # Авторы
+            authors = ', '.join(entry['authors'][:3])
+            authors_count = len(entry['authors'])
+            if authors_count > 3:
+                authors += f' и ещё {authors_count - 3}'
+            
+            # Формируем текст
             text = f"""📄 **{entry['title']}**
 
-**Авторы:**
-{', '.join(entry['authors'][:5])}
-{'...' if len(entry['authors']) > 5 else ''}
-
-**Категории:** {', '.join(entry['categories'])}
-**Дата:** {entry['published'][:10]}
+👤 {authors}
+🏷️ {entry['primary_category']} • {', '.join(entry['categories'][:3])}
+📅 {entry['published'][:10]}
+🆔 `{entry['id']}`
 
 **Аннотация:**
-{entry['abstract'][:500]}...
+{entry['abstract'][:400]}...
 
-🔗 [PDF]({entry['pdf_url']}) | [arXiv]({entry['abs_url']})
+🔗 [PDF]({entry['pdf_url']}) | [Abstract на arXiv]({entry['abs_url']})
 """
             
-            # Кнопки
-            buttons = [
-                [
-                    {'text': '➕ В библиотеку', 'callback': f'/add {args}'},
-                    {'text': '📥 BibTeX', 'callback': f'/bibtex {args}'}
-                ]
-            ]
+            # Данные библиотеки
+            if in_library:
+                lib_info = f"\n\n📚 **В библиотеке**\n"
+                lib_info += f"• Добавлено: {entry.get('added_at', '')[:10]}\n"
+                lib_info += f"• Статус: {'✓ Прочитано' if entry.get('status') == 'read' else '○ Непрочитано'}\n"
+                if entry.get('starred'):
+                    lib_info += "• ★ В избранном\n"
+                if entry.get('tags'):
+                    lib_info += f"• Теги: {', '.join(['#' + t for t in entry['tags'][:5]])}\n"
+                text += lib_info
             
-            # Если в библиотеке - добавляем кнопки управления
-            if entry.get('added_at'):
-                buttons[0] = [
-                    {'text': '✓ Прочитано', 'callback': f'/mark-read {args}'},
-                    {'text': '★ Избранное', 'callback': f'/star {args}'}
-                ]
+            # Кнопки
+            buttons = []
+            
+            if in_library:
+                # Уже в библиотеке — кнопки управления
+                status_btn = '✓ Прочитано' if entry.get('status') == 'read' else '○ Отметить прочитанным'
+                star_btn = '★ Избранное' if entry.get('starred') else '☆ В избранное'
+                
+                buttons.append([
+                    {'text': status_btn, 'callback': f'/toggle-read {args}'},
+                    {'text': star_btn, 'callback': f'/star {args}'}
+                ])
+                buttons.append([{'text': '📥 BibTeX', 'callback': f'/bibtex {args}'}])
+            else:
+                # Не в библиотеке — предложить добавить
+                buttons.append([{'text': '➕ Добавить в библиотеку', 'callback': f'/add {args}'}])
+                buttons.append([{'text': '📥 BibTeX', 'callback': f'/bibtex {args}'}])
+            
+            buttons.append([
+                {'text': '🔍 Похожие', 'callback': f'/search {entry["primary_category"]}'},
+                {'text': '📚 Библиотека', 'callback': '/library'}
+            ])
             
             return {'text': text, 'buttons': buttons}
         
         except Exception as e:
-            return {'text': f'❌ Ошибка: {e}'}
+            return {
+                'text': f'❌ Ошибка: {e}',
+                'buttons': [[{'text': '🔙 Назад', 'callback': '/start'}]]
+            }
     
     # /digest
     elif command == 'digest':
@@ -332,7 +449,38 @@ def handle_command(command, args='', user_id=None):
         
         try:
             update_status(args, 'read')
-            return {'text': f'✅ Статья {args} отмечена как прочитанная'}
+            return {
+                'text': f'✅ Статья отмечена как прочитанная',
+                'buttons': [
+                    [
+                        {'text': 'ℹ️ Детали', 'callback': f'/info {args}'},
+                        {'text': '📚 Библиотека', 'callback': '/library'}
+                    ]
+                ]
+            }
+        except Exception as e:
+            return {'text': f'❌ Ошибка: {e}'}
+    
+    # /toggle-read <arxiv_id>
+    elif command == 'toggle-read':
+        if not args:
+            return {'text': '❌ Укажите arXiv ID'}
+        
+        try:
+            entry = get_entry(args)
+            if not entry:
+                return {'text': f'❌ Статья {args} не найдена в библиотеке'}
+            
+            new_status = 'unread' if entry.get('status') == 'read' else 'read'
+            update_status(args, new_status)
+            
+            icon = '✓' if new_status == 'read' else '○'
+            action = 'прочитанной' if new_status == 'read' else 'непрочитанной'
+            
+            return {
+                'text': f'{icon} Статья отмечена как {action}',
+                'buttons': [[{'text': 'ℹ️ Детали', 'callback': f'/info {args}'}]]
+            }
         except Exception as e:
             return {'text': f'❌ Ошибка: {e}'}
     
@@ -345,40 +493,64 @@ def handle_command(command, args='', user_id=None):
             is_starred = toggle_starred(args)
             icon = '★' if is_starred else '☆'
             action = 'добавлена в избранное' if is_starred else 'убрана из избранного'
-            return {'text': f'{icon} Статья {args} {action}'}
+            
+            return {
+                'text': f'{icon} Статья {action}',
+                'buttons': [
+                    [
+                        {'text': 'ℹ️ Детали', 'callback': f'/info {args}'},
+                        {'text': '📚 Библиотека', 'callback': '/library'}
+                    ]
+                ]
+            }
         except Exception as e:
             return {'text': f'❌ Ошибка: {e}'}
     
     # /help
     elif command == 'help':
         return {
-            'text': """📖 **Справка**
+            'text': """📖 **Полная справка**
 
-**Поиск и добавление:**
-/search <запрос> — поиск статей
-/add <arxiv_id> — добавить в библиотеку
-/info <arxiv_id> — информация о статье
+**🔍 Поиск:**
+/search quantum — поиск по теме
+/search "author name" — по автору
 
-**Библиотека:**
-/library — показать библиотеку
-/stats — статистика
+**➕ Добавление:**
+/add 1706.03762 — добавить статью
+/info 1706.03762 — детали перед добавлением
 
-**Авторы:**
-/authors — список отслеживаемых
-(добавление через CLI)
+**📚 Библиотека:**
+/library — мои статьи (последние 5)
+/stats — статистика и категории
 
-**Дайджесты:**
+**👥 Авторы:**
+/authors — отслеживаемые исследователи
+(добавление: CLI или попроси админа)
+
+**📰 Дайджесты:**
 /digest — за неделю
-/digest day — за день
+/digest day — за сутки
 /digest month — за месяц
 
-**Экспорт:**
-/bibtex <arxiv_id> — получить BibTeX
+**📥 Экспорт:**
+/bibtex 1706.03762 — получить BibTeX цитату
 
-**Web интерфейс:**
-http://localhost:5002
-(запустите: `python3 web/app.py`)
-"""
+**💡 Подсказки:**
+• Кликай на кнопки под сообщениями
+• ID статьи — это число типа 1706.03762
+• Найти ID: ищи статью в Google → URL содержит ID
+
+**🖥️ Web интерфейс:**
+Если запущен: http://localhost:5002
+(больше возможностей: заметки, фильтры, графики)
+""",
+            'buttons': [
+                [
+                    {'text': '📚 Библиотека', 'callback': '/library'},
+                    {'text': '🔍 Поиск', 'callback': '/search'}
+                ],
+                [{'text': '🏠 Главная', 'callback': '/start'}]
+            ]
         }
     
     else:
