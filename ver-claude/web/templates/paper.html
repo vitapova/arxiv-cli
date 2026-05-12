@@ -13,7 +13,7 @@
     
     <div class="paper-actions">
         <form method="post" action="/paper/{{ entry.id }}/status" style="display: inline;">
-            {% if entry.status == 'read' %}
+            {% if entry.get('status') == 'read' %}
             <input type="hidden" name="status" value="unread">
             <button type="submit" class="btn btn-success">✓ Прочитано</button>
             {% else %}
@@ -23,7 +23,7 @@
         </form>
         
         <form method="post" action="/paper/{{ entry.id }}/star" style="display: inline;">
-            {% if entry.starred %}
+            {% if entry.get('starred') %}
             <button type="submit" class="btn btn-warning">★ Избранное</button>
             {% else %}
             <button type="submit" class="btn btn-secondary">☆ В избранное</button>
@@ -48,7 +48,7 @@
         </div>
     </div>
     
-    {% if entry.tags %}
+    {% if entry.get('tags') %}
     <div class="paper-section">
         <h2>🏷️ Теги</h2>
         <div class="badges">

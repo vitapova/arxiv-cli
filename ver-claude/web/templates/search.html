@@ -30,9 +30,9 @@
             {% for entry in results %}
             <tr class="paper-row" onclick="window.location='/paper/{{ entry.id }}'">
                 <td class="status-cell">
-                    {% if entry.starred %}
+                    {% if entry.get('starred') %}
                     <span class="status-icon starred">★</span>
-                    {% elif entry.status == 'read' %}
+                    {% elif entry.get('status') == 'read' %}
                     <span class="status-icon read">✓</span>
                     {% else %}
                     <span class="status-icon unread">○</span>

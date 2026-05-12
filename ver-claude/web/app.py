@@ -157,8 +157,10 @@ if __name__ == "__main__":
     import uvicorn
     
     print("🚀 Starting arXiv Assistant Web UI...")
-    print("📍 Open: http://localhost:5000")
+    print("📍 Open: http://localhost:5001")
     print("⌨️  Press Ctrl+C to stop")
     print()
     
-    uvicorn.run(app, host="127.0.0.1", port=5000)
+    import os
+    port = int(os.environ.get("PORT", 5002))
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")

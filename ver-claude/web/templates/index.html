@@ -39,9 +39,9 @@
         {% for entry in entries %}
         <tr class="paper-row" onclick="window.location='/paper/{{ entry.id }}'">
             <td class="status-cell">
-                {% if entry.starred %}
+                {% if entry.get('starred') %}
                 <span class="status-icon starred" title="Избранное">★</span>
-                {% elif entry.status == 'read' %}
+                {% elif entry.get('status') == 'read' %}
                 <span class="status-icon read" title="Прочитано">✓</span>
                 {% else %}
                 <span class="status-icon unread" title="Непрочитано">○</span>
@@ -53,11 +53,15 @@
                 <span class="badge badge-category">{{ entry.primary_category }}</span>
             </td>
             <td class="tags-cell">
-                {% for tag in entry.tags[:3] %}
-                <span class="badge badge-tag">#{{ tag }}</span>
-                {% endfor %}
-                {% if entry.tags|length > 3 %}
-                <span class="badge-more">+{{ entry.tags|length - 3 }}</span>
+                {% if entry.get('tags') %}
+                    {% for tag in entry.tags[:3] %}
+                    <span class="badge badge-tag">#{{ tag }}</span>
+                    {% endfor %}
+                    {% if entry.tags|length > 3 %}
+                    <span class="badge-more">+{{ entry.tags|length - 3 }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">-</span>
                 {% endif %}
             </td>
             <td class="title-cell">
