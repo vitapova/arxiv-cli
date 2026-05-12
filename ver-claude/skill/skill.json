@@ -1,0 +1,84 @@
+{
+  "name": "arxiv-assistant",
+  "version": "1.0.0",
+  "description": "arXiv papers search, library management, and research assistant",
+  "author": "Vita Potapova",
+  "repository": "https://github.com/vitapova/arxiv-cli",
+  "requires": {
+    "python": ">=3.8",
+    "packages": [
+      "click>=8.0.0",
+      "requests>=2.25.0",
+      "feedparser>=6.0.0",
+      "python-dateutil>=2.8.0",
+      "rich>=13.0.0"
+    ]
+  },
+  "tools": [
+    {
+      "name": "arxiv_search",
+      "description": "Search arXiv papers by keywords, authors, or categories",
+      "parameters": {
+        "query": "search query",
+        "max_results": "maximum number of results (default: 10)",
+        "category": "filter by category (optional)",
+        "author": "filter by author (optional)"
+      }
+    },
+    {
+      "name": "arxiv_add",
+      "description": "Add paper to library without downloading PDF",
+      "parameters": {
+        "arxiv_id": "arXiv ID (e.g., 1706.03762)",
+        "tags": "comma-separated tags (optional)"
+      }
+    },
+    {
+      "name": "arxiv_library",
+      "description": "View library with filters",
+      "parameters": {
+        "status": "filter by status: read, unread, starred (optional)",
+        "tag": "filter by tag (optional)",
+        "search": "search query (optional)"
+      }
+    },
+    {
+      "name": "arxiv_info",
+      "description": "Get detailed information about a paper",
+      "parameters": {
+        "arxiv_id": "arXiv ID"
+      }
+    },
+    {
+      "name": "arxiv_export",
+      "description": "Export bibliography in BibTeX or CSL format",
+      "parameters": {
+        "format": "bibtex or csl",
+        "tag": "filter by tag (optional)"
+      }
+    },
+    {
+      "name": "arxiv_digest",
+      "description": "Generate digest of new publications",
+      "parameters": {
+        "period": "day, week, or month",
+        "category": "filter by category (optional)"
+      }
+    },
+    {
+      "name": "arxiv_authors_check",
+      "description": "Check new papers from tracked authors",
+      "parameters": {}
+    },
+    {
+      "name": "arxiv_download",
+      "description": "Download PDF of a paper",
+      "parameters": {
+        "arxiv_id": "arXiv ID",
+        "auto_name": "use automatic naming (optional, boolean)"
+      }
+    }
+  ],
+  "setup": "pip install -e .",
+  "entry_point": "arxiv_cli.cli:cli"
+}
