@@ -34,7 +34,8 @@ logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /start."""
-    response = handle_command('start')
+    user_id = update.effective_user.id
+    response = handle_command('start', user_id=user_id)
     
     # Формируем inline клавиатуру
     keyboard = []
@@ -56,7 +57,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def library_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /library."""
-    response = handle_command('library')
+    user_id = update.effective_user.id
+    response = handle_command('library', user_id=user_id)
     
     keyboard = []
     if 'buttons' in response:
@@ -78,8 +80,9 @@ async def library_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def search_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /search."""
+    user_id = update.effective_user.id
     query = ' '.join(context.args) if context.args else ''
-    response = handle_command('search', query)
+    response = handle_command('search', query, user_id=user_id)
     
     keyboard = []
     if 'buttons' in response:
@@ -101,8 +104,9 @@ async def search_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def add_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /add."""
+    user_id = update.effective_user.id
     arxiv_id = context.args[0] if context.args else ''
-    response = handle_command('add', arxiv_id)
+    response = handle_command('add', arxiv_id, user_id=user_id)
     
     keyboard = []
     if 'buttons' in response:

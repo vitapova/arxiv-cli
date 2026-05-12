@@ -20,17 +20,22 @@ from arxiv_cli.commands.digest import create_digest
 from arxiv_cli.utils.formatter import format_bibtex
 
 
-def handle_command(command, args=''):
+def handle_command(command, args='', user_id=None):
     """
     Обработка команды от Telegram бота.
     
     Args:
         command: команда без /
         args: аргументы команды
+        user_id: Telegram user ID для multiuser поддержки
         
     Returns:
         dict: response с текстом и опциональными кнопками
     """
+    # Устанавливаем контекст пользователя
+    if user_id:
+        from arxiv_cli.utils.context import set_user
+        set_user(str(user_id))
     
     # /start
     if command == 'start':

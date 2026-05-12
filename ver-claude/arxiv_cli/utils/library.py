@@ -14,39 +14,73 @@ from datetime import datetime
 LIBRARY_FILE = Path.home() / '.arxiv-cli' / 'library.json'
 
 
-def ensure_library_dir():
+def get_library_path(user_id=None):
+    """
+    Получить путь к файлу библиотеки.
+    
+    Args:
+        user_id: ID пользователя (опционально)
+    
+    Returns:
+        Path: путь к library.json
+    """
+    if user_id is None:
+        return LIBRARY_FILE
+    
+    from arxiv_cli.utils.multiuser import get_library_file
+    return get_library_file(user_id)
+
+
+def ensure_library_dir(user_id=None):
     """Создание директории библиотеки если не существует."""
-    LIBRARY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    lib_path = get_library_path(user_id)
+    lib_path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def load_library():
+def load_library(user_id=None):
     """
     Загрузка библиотеки статей.
+    
+    Args:
+        user_id: ID пользователя (опционально). Если None — использует контекст.
     
     Returns:
         dict: библиотека с метаданными статей
     """
-    ensure_library_dir()
+    # Используем user_id из контекста если не передан явно
+    if user_id is None:
+        try:
+            from arxiv_cli.utils.context import get_user
+            user_id = get_user()
+        except ImportError:
+            pass
     
-    if not LIBRARY_FILE.exists():
+    ensure_library_dir(user_id)
+    
+    lib_path = get_library_path(user_id)
+    
+    if not lib_path.exists():
         return {'entries': [], 'updated': None}
     
-    with open(LIBRARY_FILE, 'r', encoding='utf-8') as f:
+    with open(lib_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
-def save_library(library):
+def save_library(library, user_id=None):
     """
     Сохранение библиотеки.
     
     Args:
         library: dict с метаданными
+        user_id: ID пользователя (опционально)
     """
-    ensure_library_dir()
+    ensure_library_dir(user_id)
     
     library['updated'] = datetime.now().isoformat()
     
-    with open(LIBRARY_FILE, 'w', encoding='utf-8') as f:
+    lib_path = get_library_path(user_id)
+    
+    with open(lib_path, 'w', encoding='utf-8') as f:
         json.dump(library, f, indent=2, ensure_ascii=False)
 
 
