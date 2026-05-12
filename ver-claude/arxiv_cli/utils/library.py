@@ -50,6 +50,68 @@ def save_library(library):
         json.dump(library, f, indent=2, ensure_ascii=False)
 
 
+def add_note(arxiv_id, note_text):
+    """
+    Добавить заметку к статье.
+    
+    Args:
+        arxiv_id: идентификатор статьи
+        note_text: текст заметки
+    """
+    library = load_library()
+    
+    for entry in library['entries']:
+        if entry['id'] == arxiv_id:
+            if 'notes' not in entry:
+                entry['notes'] = []
+            
+            entry['notes'].append({
+                'text': note_text,
+                'created_at': datetime.now().isoformat()
+            })
+            break
+    
+    save_library(library)
+
+
+def get_notes(arxiv_id=None, search_query=None):
+    """
+    Получить заметки.
+    
+    Args:
+        arxiv_id: ID статьи (опционально)
+        search_query: поиск по тексту заметок
+        
+    Returns:
+        list: статьи с заметками
+    """
+    library = load_library()
+    
+    results = []
+    
+    for entry in library['entries']:
+        notes = entry.get('notes', [])
+        if not notes:
+            continue
+        
+        # Фильтр по ID
+        if arxiv_id and entry['id'] != arxiv_id:
+            continue
+        
+        # Поиск по тексту
+        if search_query:
+            matching_notes = [n for n in notes if search_query.lower() in n['text'].lower()]
+            if not matching_notes:
+                continue
+            entry_copy = entry.copy()
+            entry_copy['notes'] = matching_notes
+            results.append(entry_copy)
+        else:
+            results.append(entry)
+    
+    return results
+
+
 def add_entry(entry, tags=None, status='unread'):
     """
     Добавление статьи в библиотеку.

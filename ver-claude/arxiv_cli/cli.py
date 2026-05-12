@@ -837,6 +837,115 @@ def export(arxiv_id, format, output, export_all, category, tag, stats, plain):
 
 
 @cli.group()
+def note():
+    """Заметки к статьям."""
+    pass
+
+
+@note.command(name='add')
+@click.argument('arxiv_id')
+@click.argument('text', required=False)
+@click.option('--editor', is_flag=True, help='Открыть редактор')
+def note_add_cmd(arxiv_id, text, editor):
+    """Добавить заметку к статье."""
+    from arxiv_cli.commands.note import note_add
+    from arxiv_cli.utils.rich_display import success_message
+    
+    try:
+        if editor or not text:
+            # Открываем редактор
+            text = click.edit('\n\n# Напишите заметку выше')
+            if not text:
+                click.echo('Отменено')
+                return
+            text = text.strip()
+        
+        note_add(arxiv_id, text)
+        success_message(f'Заметка добавлена к статье {arxiv_id}')
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@note.command(name='list')
+@click.argument('arxiv_id', required=False)
+def note_list_cmd(arxiv_id):
+    """Список заметок."""
+    from arxiv_cli.commands.note import note_list
+    from arxiv_cli.utils.rich_display import console
+    from rich.panel import Panel
+    
+    try:
+        entries = note_list(arxiv_id=arxiv_id)
+        
+        if not entries:
+            from arxiv_cli.utils.rich_display import warning_message
+            warning_message('Нет заметок')
+            return
+        
+        console.print(f"\n[bold cyan]📝 Заметок:[/bold cyan] {sum(len(e.get('notes', [])) for e in entries)}\n")
+        
+        for entry in entries:
+            console.print(f"[bold yellow]📄 {entry['id']}[/bold yellow]")
+            console.print(f"[dim]{entry['title'][:70]}...[/dim]\n")
+            
+            for i, note in enumerate(entry.get('notes', []), 1):
+                date = note['created_at'][:10]
+                console.print(Panel(
+                    note['text'],
+                    title=f"[bold]Заметка #{i}[/bold] [dim]({date})[/dim]",
+                    border_style="cyan"
+                ))
+                console.print()
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@note.command(name='search')
+@click.argument('query')
+def note_search_cmd(query):
+    """Поиск по заметкам."""
+    from arxiv_cli.commands.note import note_search
+    from arxiv_cli.utils.rich_display import console
+    from rich.panel import Panel
+    
+    try:
+        entries = note_search(query)
+        
+        if not entries:
+            from arxiv_cli.utils.rich_display import warning_message
+            warning_message(f'Заметок с "{query}" не найдено')
+            return
+        
+        total_notes = sum(len(e.get('notes', [])) for e in entries)
+        console.print(f"\n[bold cyan]🔍 Найдено:[/bold cyan] {total_notes} заметок в {len(entries)} статьях\n")
+        
+        for entry in entries:
+            console.print(f"[bold yellow]📄 {entry['id']}[/bold yellow] [dim]{entry['title'][:60]}...[/dim]\n")
+            
+            for note in entry.get('notes', []):
+                if query.lower() in note['text'].lower():
+                    # Подсветка найденного текста
+                    text = note['text']
+                    # Простая подсветка (можно улучшить)
+                    highlighted = text.replace(query, f'[bold yellow on black]{query}[/bold yellow on black]')
+                    
+                    console.print(Panel(
+                        highlighted,
+                        title=f"[dim]{note['created_at'][:10]}[/dim]",
+                        border_style="green"
+                    ))
+                    console.print()
+    
+    except Exception as e:
+        click.echo(f'✗ Ошибка: {e}', err=True)
+        raise click.Abort()
+
+
+@cli.group()
 def authors():
     """Отслеживание авторов."""
     pass
