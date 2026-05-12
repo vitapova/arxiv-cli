@@ -110,7 +110,8 @@ class TestCLIList:
         result = runner.invoke(cli, ['list'])
         
         assert result.exit_code == 0
-        assert 'Библиотека:' in result.output
+        # Rich вывод теперь по умолчанию
+        assert 'Библиотека' in result.output or 'Всего статей' in result.output
     
     def test_list_table(self, runner):
         """Список в табличном формате."""
@@ -163,7 +164,8 @@ class TestCLIExport:
         result = runner.invoke(cli, ['export', '--stats'])
         
         assert result.exit_code == 0
-        assert 'Статей в библиотеке' in result.output
+        # Rich вывод по умолчанию
+        assert 'Всего статей' in result.output or 'Статей в библиотеке' in result.output
     
     def test_export_single_bibtex(self, runner):
         """Экспорт одной статьи в BibTeX."""
