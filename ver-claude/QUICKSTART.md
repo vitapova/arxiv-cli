@@ -1,14 +1,5 @@
 # 🚀 Быстрый старт arXiv CLI
 
-## Где код?
-
-**GitHub:** https://github.com/vitapova/arxiv-cli
-
-**На твоём Mac:**  
-`/Users/vitapotapova/.openclaw/workspace/arxiv-cli/ver-claude/`
-
----
-
 ## Как запустить (3 простых шага)
 
 ### 1️⃣ Открой Terminal
@@ -21,11 +12,7 @@
 
 ### 2️⃣ Перейди в папку проекта
 
-Скопируй эту команду и вставь в Terminal (Cmd+V), нажми Enter:
-
-```bash
-cd /Users/vitapotapova/.openclaw/workspace/arxiv-cli/ver-claude
-```
+Скопируй эту команду и вставь в Terminal (Cmd+V), нажми Enter
 
 ### 3️⃣ Готово! Теперь можешь использовать команды
 
