@@ -194,18 +194,6 @@ python3 web/app.py
 /stats — статистика
 ```
 
-### Для хоста бота (ты)
-
-**1. Создай бота через @BotFather**
-
-**2. Запусти:**
-```bash
-export TELEGRAM_BOT_TOKEN='ваш_токен'
-python3 bot/standalone_bot.py
-```
-
-**Документация:** [bot/SETUP.md](bot/SETUP.md)
-
 ---
 
 ## 💾 Где хранятся данные
@@ -225,24 +213,6 @@ python3 bot/standalone_bot.py
 ```
 
 **Важно:** Данные на диске, не теряются при перезапуске.
-
----
-
-## 🤖 LLM Integration (опционально)
-
-Добавь AI-анализ дайджестов:
-
-```bash
-export OPENAI_API_KEY='sk-...'
-
-# LLM выбирает топ-5 важных статей
-arxiv digest --period week --ai-rank
-
-# Narrative дайджест
-arxiv digest --period week --ai-narrative
-```
-
-**Документация:** [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
@@ -274,42 +244,6 @@ pytest tests/ -k "not real"
 ```
 
 **Покрытие:** 75% (117 тестов) ✅
-
----
-
-## 🎯 Для AGI исследователей
-
-**Специальные возможности:**
-- 👥 Отслеживание ключевых авторов (Sutskever, Bengio, etc.)
-- 📝 Reading notes с полнотекстовым поиском
-- 🔗 Связи между работами (планируется)
-- 🤖 LLM summaries (опционально)
-- 📊 Trend analysis (планируется)
-
-**Подробнее:** [AGI_FEATURES.md](AGI_FEATURES.md)
-
----
-
-## 📦 Установка для других исследователей
-
-### Вариант A: Через твой Telegram бот
-**Самый простой** — просто пишут боту, ничего не устанавливают.
-
-### Вариант B: Локальная установка
-```bash
-git clone https://github.com/vitapova/arxiv-cli
-cd arxiv-cli/ver-claude
-pip install -e .
-```
-
-### Вариант C: OpenClaw Skill (если есть OpenClaw)
-```bash
-openclaw skill install arxiv-assistant from https://github.com/vitapova/arxiv-cli
-```
-
-**Подробнее:** [DISTRIBUTION.md](DISTRIBUTION.md)
-
----
 
 ## 🛠️ Технологии
 
