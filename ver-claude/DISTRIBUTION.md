@@ -105,10 +105,10 @@ openclaw skill install arxiv-assistant
 ## 🎯 Рекомендация для массового использования
 
 ### Фаза 1: MVP (сейчас)
-**Публичный Telegram бот** на твоём Mac/сервере
+**Публичный Telegram бот** на сервере
 - Простой для пользователей
 - Быстрый старт
-- Соберёшь feedback
+- feedback
 
 ### Фаза 2: Scaling (если популярно)
 **Multiuser версия:**
@@ -128,7 +128,7 @@ openclaw skill install arxiv-assistant
 ### Вариант A: Используй готового бота (когда запущу)
 
 1. Открой Telegram
-2. Найди `@arxiv_yourname_bot`
+2. Найди `@arxivita_bot`
 3. /start
 4. Готово!
 
@@ -168,18 +168,3 @@ python3 bot/standalone_bot.py
 openclaw skill install arxiv-assistant from https://github.com/vitapova/arxiv-cli
 ```
 
----
-
-## 🚀 Следующие шаги
-
-**Для запуска публичного бота:**
-
-1. ✅ Создать бота через @BotFather
-2. ✅ Получить token
-3. ✅ Запустить `standalone_bot.py`
-4. ✅ Протестировать
-5. ✅ Опубликовать ссылку
-
-**Делаем?**
-
-Или сначала доделаем multiuser поддержку (чтобы у каждого своя библиотека)?
