@@ -109,19 +109,6 @@
 - **Verbose mode** для отладки
 - **Comprehensive tests** — unit + integration
 
-## Время разработки
-
-**Примерное распределение:**
-- Структура + инфраструктура: ~30 минут
-- download + search: ~30 минут
-- export + list + управление: ~40 минут
-- track + digest + subscribe: ~60 минут
-- Rate limit handling: ~20 минут
-- Тестирование (3 итерации): ~90 минут
-- Документация: ~30 минут
-
-**Итого:** ~5 часов активной работы
-
 ## Модель
 
 **Claude Sonnet 4.5** (Anthropic)
